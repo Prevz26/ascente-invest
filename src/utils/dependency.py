@@ -5,7 +5,7 @@ from flask_jwt_extended import JWTManager
 from flask_mail import Mail
 from itsdangerous import URLSafeTimedSerializer
 from .config import get_env_value
-# from celery import Celery
+
 
 
 SECRET_KEY = get_env_value("SECRET_KEY")

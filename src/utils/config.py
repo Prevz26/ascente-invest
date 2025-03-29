@@ -54,11 +54,11 @@ class Config:
 
     
     # Set the upload folder
-    UPLOAD_FOLDER = 'uploads'
-    os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+#     UPLOAD_FOLDER = 'uploads'
+#     os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-def get_file_path(filename):
-    return os.path.join(Config.UPLOAD_FOLDER, filename)
+# def get_file_path(filename):
+#     return os.path.join(Config.UPLOAD_FOLDER, filename)
 
 
 class DevelopmentConfig(Config):
