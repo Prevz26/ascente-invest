@@ -1,0 +1,183 @@
+openapi: 3.0.0
+info:
+  title: Profile API
+  description: API endpoints for managing user profiles
+  version: 1.0.0
+
+paths:
+  /investment/profile:
+    get:
+      summary: Get user profile
+      description: Retrieve the profile details of the authenticated user
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Profile successfully retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  message:
+                    type: string
+                    example: Profile successfully fetched
+                  data:
+                    $ref: '#/components/schemas/Profile'
+        '401':
+          description: Unauthorized - Invalid or missing token
+        '404':
+          description: Profile not found
+    
+    patch:
+      summary: Update user profile
+      description: Update the profile details of the authenticated user
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProfileUpdate'
+      responses:
+        '200':
+          description: Profile successfully updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  message:
+                    type: string
+                    example: Profile successfully updated
+                  data:
+                    $ref: '#/components/schemas/Profile'
+        '400':
+          description: Bad request - Invalid input
+        '401':
+          description: Unauthorized - Invalid or missing token
+        '422':
+          description: Validation error
+        '500':
+          description: Database error
+
+components:
+  schemas:
+    Profile:
+      type: object
+      properties:
+        username:
+          type: string
+          example: johndoe
+        fullname:
+          type: string
+          example: John Doe
+        email:
+          type: string
+          format: email
+          example: john@example.com
+        first_name:
+          type: string
+          example: John
+        last_name:
+          type: string
+          example: Doe
+        date_of_birth:
+          type: string
+          format: date
+          example: "1990-01-01"
+        bio:
+          type: string
+          example: A short bio about me
+        country:
+          type: string
+          enum:
+            - united states
+            - canada
+            - united kingdom
+            # ... other countries from your schema
+        city:
+          type: string
+          example: New York
+        address:
+          type: string
+          example: 123 Main St
+        mobile_number:
+          type: string
+          example: "+1234567890"
+        street1:
+          type: string
+          example: 123 Main St
+        street2:
+          type: string
+          example: Apt 4B
+        state:
+          type: string
+          example: NY
+        zip_code:
+          type: string
+          example: "10001"
+        emergency_contact_name:
+          type: string
+          example: Jane Doe
+        emergency_contact_number:
+          type: string
+          example: "+1987654321"
+        preferred_contact_method:
+          type: string
+          example: email
+
+    ProfileUpdate:
+      type: object
+      properties:
+        username:
+          type: string
+        fullname:
+          type: string
+        email:
+          type: string
+          format: email
+        first_name:
+          type: string
+        last_name:
+          type: string
+        date_of_birth:
+          type: string
+          format: date
+        bio:
+          type: string
+        country:
+          type: string
+        city:
+          type: string
+        address:
+          type: string
+        mobile_number:
+          type: string
+        street1:
+          type: string
+        street2:
+          type: string
+        state:
+          type: string
+        zip_code:
+          type: string
+        emergency_contact_name:
+          type: string
+        emergency_contact_number:
+          type: string
+        preferred_contact_method:
+          type: string
+
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

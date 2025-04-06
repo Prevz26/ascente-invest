@@ -1,0 +1,10 @@
+2025-04-02 13:36:30,138 - v1.profiles.routes - INFO - Received profile update request with data: {'city': 'calabar', 'address': 'ibb way'}
+2025-04-02 13:36:30,403 - v1.profiles.service - INFO - {'city': 'calabar', 'address': 'ibb way'}
+2025-04-02 13:36:36,141 - v1.profiles.service - INFO - Successfully updated profile for user 1
+2025-04-02 13:36:36,142 - v1.profiles.routes - INFO - Successfully updated profile for user
+2025-04-02 13:37:11,639 - v1.profiles.service - INFO - Successfully fetched details for user 1
+2025-04-02 13:38:37,922 - v1.profiles.routes - INFO - Received profile update request with data: {'username': 'ojogu'}
+2025-04-02 13:38:37,923 - v1.profiles.service - INFO - {'username': 'ojogu'}
+2025-04-02 13:38:39,254 - v1.profiles.service - INFO - Successfully updated profile for user 1
+2025-04-02 13:38:39,255 - v1.profiles.routes - INFO - Successfully updated profile for user
+2025-04-02 13:38:52,512 - v1.profiles.service - INFO - Successfully fetched details for user 1

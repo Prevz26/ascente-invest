@@ -1,0 +1,33 @@
+openapi: 3.0.0
+info:
+  title: Ascente Invest Admin API
+  description: API documentation for admin endpoints
+  version: 1.0.0
+  contact:
+    name: Admin Team
+    email: admin@ascenteinvest.com
+
+servers:
+  - url: http://localhost:8000/api
+    description: Local development server
+  - url: https://api.ascenteinvest.com
+    description: Production server
+
+tags:
+  - name: Authentication
+    description: Admin authentication endpoints
+  - name: Management
+    description: System management endpoints
+
+paths:
+  # Your API endpoints will go here
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+security:
+  - BearerAuth: []

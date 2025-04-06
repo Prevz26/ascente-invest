@@ -23,16 +23,7 @@ class CustomResponse:
         data: Optional[Any] = None,
         status_code: int = 200
     ) -> Tuple[Dict[str, Any], int]:
-        """
-        Create a standardized response format.
-        Args:
-            status (str): Response status ('success' or 'error')
-            message (str): Response message
-            data (Any, optional): Response data
-            status_code (int): HTTP status code
-        Returns:
-            Tuple[Dict[str, Any], int]: Response dict and status code
-        """
+        
         response = {
             'status': status,
             'message': message,
@@ -101,6 +92,7 @@ class CustomResponse:
     ) -> Tuple[Dict[str, Any], int]:
         """500 Internal Server Error"""
         return self.error_response(message, 500)
+    
     def json_missing_error(
         self,
         message: str = 'JSON is missing'

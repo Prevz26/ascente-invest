@@ -1,24 +1,63 @@
-from pydantic import BaseModel, Field
-from typing import Optional
+import datetime
+from pydantic import BaseModel, Field, EmailStr
+from typing import Optional, Literal
 
-class ProfileSchema(BaseModel):
-    first_name: Optional[str] = Field(None, description="The user's first name")
-    last_name: Optional[str] = Field(None, description="The user's last name")
-    date_of_birth: Optional[str] = Field(None, description="The user's date of birth")
-    bio: Optional[str] = Field(None, description="The user's bio")
-    country: Optional[str] = Field(None, description="The user's country")
-    city: Optional[str] = Field(None, description="The user's city")
-    address: Optional[str] = Field(None, description="The user's address")
-    created_at: Optional[str] = Field(None, description="The user's creation date")
-    updated_at: Optional[str] = Field(None, description="The user's last update date")
+class DumpProfileSchema(BaseModel):
+    username: str = Field(max_length=50)
+    fullname: str = Field(max_length=100)
+    email: EmailStr = Field(max_length=100)
+    referral_id: Optional[str] = Field(max_length=50, default=None)
+    first_name: Optional[str] = Field(max_length=30, default=None)
+    last_name: Optional[str] = Field(max_length=30, default=None)
+    date_of_birth: Optional[datetime.date] = None
+    bio: Optional[str] = None
+    country: Literal[
+        'united states', 'canada', 'united kingdom', 'australia', 'india', 'germany', 'france', 'italy', 'spain', 'mexico',
+        'brazil', 'south korea', 'japan', 'china', 'russia', 'south africa', 'nigeria', 'argentina', 'egypt', 'saudi arabia',
+        'sweden', 'norway', 'netherlands', 'denmark', 'finland', 'belgium', 'switzerland', 'austria', 'poland', 'portugal'
+    ]
+    city: Optional[str] = Field(max_length=50, default=None)
+    address: Optional[str] = Field(max_length=255, default=None)
+    is_admin: bool = False
+    is_fully_registered: bool = False
+    mobile_number: Optional[str] = Field(max_length=20, default=None)
+    street1: Optional[str] = Field(max_length=255, default=None)
+    street2: Optional[str] = Field(max_length=255, default=None)
+    state: Optional[str] = Field(max_length=50, default=None)
+    zip_code: Optional[str] = Field(max_length=20, default=None)
+    emergency_contact_name: Optional[str] = Field(max_length=100, default=None)
+    emergency_contact_number: Optional[str] = Field(max_length=20, default=None)
+    preferred_contact_method: Optional[str] = Field(max_length=20, default=None)
 
-    class Config:
-        orm_mode = True
 
+import datetime
+from pydantic import BaseModel, Field, EmailStr
+from typing import Optional, Literal
 
-class ProfileReadSchema(ProfileSchema):
-    email: str = Field(..., description="The user's email", read_only=True)
-
-    class Config(ProfileSchema.Config):
-        read_only_fields = ["fist_name", "created_at", "updated_at"]
+class LoadProfileSchema(BaseModel):
+    username: Optional[str] = Field(max_length=50, default=None)
+    fullname: Optional[str] = Field(max_length=100, default=None)
+    email: Optional[EmailStr] = Field(max_length=100, default=None)
+    country: Optional[Literal[
+        'united states', 'canada', 'united kingdom', 'australia', 'india', 'germany', 'france', 'italy', 'spain', 'mexico',
+        'brazil', 'south korea', 'japan', 'china', 'russia', 'south africa', 'nigeria', 'argentina', 'egypt', 'saudi arabia',
+        'sweden', 'norway', 'netherlands', 'denmark', 'finland', 'belgium', 'switzerland', 'austria', 'poland', 'portugal'
+    ]] = None
+    referral_id: Optional[str] = Field(max_length=50, default=None)
+    first_name: Optional[str] = Field(max_length=30, default=None)
+    last_name: Optional[str] = Field(max_length=30, default=None)
+    date_of_birth: Optional[datetime.date] = None
+    bio: Optional[str] = None
+    city: Optional[str] = Field(max_length=50, default=None)
+    address: Optional[str] = Field(max_length=255, default=None)
+    is_admin: bool = False
+    is_fully_registered: bool = False
+    mobile_number: Optional[str] = Field(max_length=20, default=None)
+    street1: Optional[str] = Field(max_length=255, default=None)
+    street2: Optional[str] = Field(max_length=255, default=None)
+    state: Optional[str] = Field(max_length=50, default=None)
+    zip_code: Optional[str] = Field(max_length=20, default=None)
+    emergency_contact_name: Optional[str] = Field(max_length=100, default=None)
+    emergency_contact_number: Optional[str] = Field(max_length=20, default=None)
+    preferred_contact_method: Optional[str] = Field(max_length=20, default=None)
 

@@ -1,6 +1,6 @@
 from flask import Blueprint
 from pydantic import ValidationError
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from werkzeug import exceptions
 from .response import custom_response
 import logging
@@ -60,6 +60,11 @@ def integrity_error_handler(e: IntegrityError):
     exception_logger.error(str(e))
     return custom_response.error_response(message='Integrity error: An object with this value already exists', status_code=e.code)
 
+@exception_blueprint.app_errorhandler(SQLAlchemyError)
+def integrity_error_handler(e: SQLAlchemyError):
+    exception_logger.error(str(e))
+    return custom_response.error_response(message='database error', status_code=e.code)
+
 @exception_blueprint.app_errorhandler(exceptions.InternalServerError)
 def internal_server_error_handler(e:exceptions.InternalServerError):
     
@@ -106,3 +111,8 @@ class EmailVerificationError(Exception):
     pass 
 
 
+class DatabaseError(Exception):
+    pass 
+
+class ServerError(Exception):
+    pass 
