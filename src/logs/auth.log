@@ -1,0 +1,43 @@
+2025-04-08 16:43:32,281 - v1.auth.routes - INFO - {'username': 'Precious', 'password': '12345678'}
+2025-04-08 16:43:35,732 - v1.auth.service - INFO - User found: <User precious>
+2025-04-08 16:43:36,212 - v1.auth.service - INFO - User authenticated
+2025-04-08 16:43:36,431 - v1.auth.service - INFO - existing user: <User precious>
+2025-04-08 16:44:02,374 - v1.auth.service - INFO - 474a1dd6-2547-436f-83d8-a8ab6cda764a
+2025-04-08 16:44:02,729 - v1.auth.service - INFO - User found: <User precious>
+2025-04-08 17:00:57,315 - v1.auth.routes - INFO - {'username': 'Precious', 'password': '12345678'}
+2025-04-08 17:01:02,942 - v1.auth.service - INFO - User found: <User precious>
+2025-04-08 17:01:03,840 - v1.auth.service - INFO - User authenticated
+2025-04-08 17:01:04,031 - v1.auth.service - INFO - existing user: <User precious>
+2025-04-08 17:01:17,876 - v1.auth.routes - INFO - {'username': 'Ojogu', 'password': '12345678'}
+2025-04-08 17:01:18,266 - v1.auth.service - INFO - User found: <User ojogu>
+2025-04-08 17:01:18,710 - v1.auth.service - INFO - User authenticated
+2025-04-08 17:01:18,882 - v1.auth.service - INFO - existing user: <User ojogu>
+2025-04-08 17:02:12,780 - v1.auth.service - INFO - df4c3777-dd9f-4b75-9c0c-d06e997847f6
+2025-04-08 17:02:13,144 - v1.auth.service - INFO - User found: <User ojogu>
+2025-04-08 17:05:59,589 - v1.auth.service - INFO - df4c3777-dd9f-4b75-9c0c-d06e997847f6
+2025-04-08 17:06:04,944 - v1.auth.service - INFO - User found: <User ojogu>
+2025-04-08 17:15:11,578 - v1.auth.service - INFO - df4c3777-dd9f-4b75-9c0c-d06e997847f6
+2025-04-08 17:15:56,475 - v1.auth.service - INFO - df4c3777-dd9f-4b75-9c0c-d06e997847f6
+2025-04-08 17:15:58,531 - v1.auth.service - INFO - User found: <User ojogu>
+2025-04-08 17:24:50,409 - v1.auth.routes - INFO - {'username': 'Ojogu', 'password': '12345678'}
+2025-04-08 17:24:54,083 - v1.auth.service - INFO - User found: <User ojogu>
+2025-04-08 17:24:54,572 - v1.auth.service - INFO - User authenticated
+2025-04-08 17:24:54,866 - v1.auth.service - INFO - existing user: <User ojogu>
+2025-04-08 17:25:23,963 - v1.auth.service - INFO - df4c3777-dd9f-4b75-9c0c-d06e997847f6
+2025-04-08 17:25:27,250 - v1.auth.service - INFO - User found: <User ojogu>
+2025-04-08 17:27:56,695 - v1.auth.service - INFO - df4c3777-dd9f-4b75-9c0c-d06e997847f6
+2025-04-08 17:27:57,092 - v1.auth.service - INFO - User found: <User ojogu>
+2025-04-08 23:20:45,734 - v1.auth.routes - INFO - {'username': 'Ojogu', 'password': '12345678'}
+2025-04-08 23:20:49,065 - v1.auth.service - INFO - User found: <User ojogu>
+2025-04-08 23:20:49,682 - v1.auth.service - INFO - User authenticated
+2025-04-08 23:20:49,869 - v1.auth.service - INFO - existing user: <User ojogu>
+2025-04-08 23:21:05,067 - v1.auth.service - INFO - df4c3777-dd9f-4b75-9c0c-d06e997847f6
+2025-04-08 23:21:05,398 - v1.auth.service - INFO - User found: <User ojogu>
+2025-04-08 23:21:14,134 - v1.auth.service - INFO - df4c3777-dd9f-4b75-9c0c-d06e997847f6
+2025-04-08 23:21:14,512 - v1.auth.service - INFO - User found: <User ojogu>
+2025-04-08 23:39:46,062 - v1.auth.routes - INFO - {'username': 'Ojogu', 'password': '12345678'}
+2025-04-08 23:39:49,425 - v1.auth.service - INFO - User found: <User ojogu>
+2025-04-08 23:39:49,927 - v1.auth.service - INFO - User authenticated
+2025-04-08 23:39:50,103 - v1.auth.service - INFO - existing user: <User ojogu>
+2025-04-08 23:40:12,290 - v1.auth.service - INFO - df4c3777-dd9f-4b75-9c0c-d06e997847f6
+2025-04-08 23:40:12,664 - v1.auth.service - INFO - User found: <User ojogu>

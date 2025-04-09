@@ -2,12 +2,12 @@ import uuid
 import sqlalchemy as sa
 from base.model import BaseModel
 import enum
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, backref
 
 
 class Plan(BaseModel):
     __tablename__ = "plans"
-    id = sa.Column(sa.Integer, primary_key=True)
+    id = sa.Column(sa.Integer, primary_key=True, unique=True, autoincrement=True)
     name = sa.Column(sa.String(30), nullable=False, unique=True)
     duration = sa.Column(sa.String, nullable=False)
     rate_of_return = sa.Column(sa.DECIMAL(10,2), nullable=False)
@@ -43,29 +43,23 @@ class TokenType(enum.Enum):
 
 class Wallet(BaseModel):
     __tablename__ = "wallets"
-    id = sa.Column(sa.Integer, primary_key=True)
-    token = sa.Column(
-        sa.String,
-        nullable=False,
-        default=TokenType.btc
-    )
-    balance = sa.Column(sa.Float, default=0.0)
+    id = sa.Column(sa.Integer, primary_key=True, unique=True, autoincrement=True)
+    balance = sa.Column(sa.Float, default=0.0, nullable=False) #usd 
 
-    # transactions = relationship("Transcations", back_populates="wallet")
 
-    user_id = sa.Column(sa.Integer, sa.ForeignKey('users.id'), unique=True)
-    user = relationship("User", backref="wallet")
+    user_id = sa.Column(sa.Integer, sa.ForeignKey('users.id'), unique=True, nullable=False)
+    user = relationship("User", backref=backref("wallet", uselist=False)) 
 
 
     
     def to_dict(self):
         return {
             'id': self.id,
-            'token': self.token.value,
             'balance': self.balance,
             'user_id': self.user_id
         }
 
+    # transactions = relationship("Transcations", back_populates="wallet")
     # investments = relationship("Investments", back_populates="wallet")
 
 
@@ -78,15 +72,10 @@ class TransactionStatus(enum.Enum):
     failed = 'failed'
     success = 'success'
 
-class Transactions(BaseModel):
+class Transaction(BaseModel):
     __tablename__ = "transactions"
-    id = sa.Column(sa.Integer, primary_key=True)
-    user_id = sa.Column(sa.Integer, sa.ForeignKey('users.id'))
-    wallet_id = sa.Column(sa.Integer, sa.ForeignKey('wallets.id'))
-
-    user = sa.orm.relationship('User', backref='transactions')
-    wallet = sa.orm.relationship('Wallet', backref='transactions')
-
+    id = sa.Column(sa.Integer, primary_key=True, unique=True, autoincrement=True)
+    token = sa.Column(sa.String, nullable=False)
     previous_balance = sa.Column(sa.Float, default=0.0)
     present_balance = sa.Column(sa.Float, default=0.0)
     status = sa.Column(
@@ -97,6 +86,13 @@ class Transactions(BaseModel):
     blockchain_in = sa.Column(sa.String(255), nullable=True)
     blockchain_out = sa.Column(sa.String(255), nullable=True)
     crytp_api_uuid = sa.Column(sa.String(255), nullable=True)
+
+    #foreign key and relationships 
+    user_id = sa.Column(sa.Integer, sa.ForeignKey('users.id'))
+    wallet_id = sa.Column(sa.Integer, sa.ForeignKey('wallets.id'))
+    user = sa.orm.relationship('User', backref='transactions')
+    wallet = sa.orm.relationship('Wallet', backref='transactions')
+
 
     def to_dict(self):
         return {

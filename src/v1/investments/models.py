@@ -2,10 +2,12 @@ from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Boolean
 from sqlalchemy.orm import relationship
 from base.model import BaseModel
 from sqlalchemy.ext.hybrid import hybrid_property
+import parsedatetime
+import datetime
 
 class Investments(BaseModel):
     __tablename__ = 'investments'
-    id = Column(Integer, primary_key=True)
+    id = Column(Integer, primary_key=True, unique=True, autoincrement=True)
     amount = Column(Integer, nullable=False)
     
     invested_date = Column(DateTime, nullable=True)
@@ -23,7 +25,22 @@ class Investments(BaseModel):
     @hybrid_property
     def maturity_date(self):
         """Calculate the investment maturity date"""
-        return self.invested_date + self.plan.duration #use the time parser to convert this to datetime to get the accurate date
+        if not self.invested_date or not self.plan.duration:
+            return None
+            
+        cal = parsedatetime.Calendar()
+        duration_str = self.plan.duration
+        if not duration_str.lower().startswith("in "):
+            duration_str = "in " + duration_str.strip()
+            
+        time_struct, status = cal.parse(duration_str, self.invested_date.timetuple())
+        if status == 1:
+            maturity_date = datetime.datetime(*time_struct[:6])
+            return maturity_date.strftime("%d/%m/%Y")
+        else:
+            raise ValueError("Could not parse duration")
+
+
 
     @hybrid_property
     def profit(self):

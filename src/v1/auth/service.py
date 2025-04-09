@@ -7,6 +7,7 @@ import utils.dependency
 import logging 
 from flask_jwt_extended import create_access_token, get_jwt_identity, create_refresh_token
 from v1.profiles.models import User, RefreshToken
+from v1.plans.models import Wallet
 from sqlalchemy import and_, or_, func
 
 # Setup logging
@@ -55,6 +56,7 @@ class AuthService():
         
         # Stores the user data in the database
         user = self.model(**request_data)
+        user.wallet = Wallet()
         try:
             self.db.add(user)
             self.db.commit()

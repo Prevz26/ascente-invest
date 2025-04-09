@@ -24,3 +24,4 @@
 #         serializer = InvestmentsSerializer(investments, many=True)
 #         return Response(serializer.data)
 
+

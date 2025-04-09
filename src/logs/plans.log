@@ -1,0 +1,6 @@
+2025-04-08 23:40:12,664 - v1.plans.service - INFO - Starting wallet funding process for user 2 with amount 0.009 eth
+2025-04-08 23:40:12,846 - v1.plans.service - INFO - Creating crypto address for ticker: eth
+2025-04-08 23:40:15,239 - v1.plans.service - INFO - Successfully created address for eth
+2025-04-08 23:40:15,240 - v1.plans.service - INFO - {'address_in': '0x267A89164a3cb523B332a6521DbAAE380699205E', 'address_out': '0x1020103496a517c74B3Db4311D6FB242715b2bc4', 'callback_url': 'http://127.0.0.1:8000/investment/webhook', 'minimum_transaction_coin': 0.0045, 'priority': 'default', 'status': 'success'}
+2025-04-08 23:40:15,240 - v1.plans.service - INFO - Generated payment address: 0x267A89164a3cb523B332a6521DbAAE380699205E
+2025-04-08 23:40:16,139 - v1.plans.service - INFO - Successfully created transaction record for wallet funding
