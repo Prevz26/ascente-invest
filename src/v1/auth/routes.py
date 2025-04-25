@@ -74,13 +74,13 @@ class Login(Resource):
             password = data.get("password")
             user = self.auth.authenticate_user(username=username, password=password)
 
-            access_token, refresh_token = self.auth.create_jwt(username)
+            access_token, refresh_token, role = self.auth.create_jwt(username)
             response = make_response(
                     self.custom_response.success_response(
                     data={
                         "access_token": access_token,
                     },
-                    status_code=200)
+                    role=role)
                 )
             response.set_cookie(
                     "refresh_token",

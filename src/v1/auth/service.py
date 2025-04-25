@@ -82,12 +82,14 @@ class AuthService():
         )
         refresh_token = create_refresh_token(identity=self.existing_users.unique_id)
 
-        #store refresh token in db
+        # Check if user is admin
+        role = "admin" if self.existing_users.is_admin else "user"
+        # store refresh token in db
         expires_at = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=30)
         new_refresh_token = RefreshToken(user_id=str(self.existing_users.unique_id), token=refresh_token, expires_at=expires_at)
         db.session.add(new_refresh_token)
         db.session.commit()
-        return access_token, refresh_token
+        return access_token, refresh_token, role
     
     def validate_refresh_token(self, refresh_token):
         user_id = self.get_current_user()

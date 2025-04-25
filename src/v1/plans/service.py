@@ -1,11 +1,16 @@
+import datetime
 import logging
 from utils.dependency import db
-from utils.exceptions import NotFoundError, ServerError
+from urllib.parse import urlencode
+from utils.exceptions import NotActive, NotFoundError, ServerError
 from sqlalchemy.exc import SQLAlchemyError
 from .models import Plan, Wallet, Transaction
-from .schema import RequestCryptApiSchema, ResponseCryptApiSchema, LogResponseSchema, CallBack
+from .schema import PendingCallback, RequestCryptApiSchema, ResponseCryptApiSchema, LogResponseSchema, CallBack, SuccessCallback
 from v1.auth.service import auth_service
 import requests
+from v1.investments.service import investment_service
+from v1.investments.models import Investments
+import uuid
 
 # Setup logging
 logger = logging.getLogger(__name__)
@@ -51,13 +56,48 @@ class CryptApi():
         except requests.RequestException as e:
             logger.error(f"Error retrieving logs for {self.ticker}: {str(e)}")
             raise ServerError("Failed to create crypto address")
-
+        
+    def convert(self, ticker, value, from_currency):
+        logger.info(f"Converting {value} {from_currency} to {ticker}")
+        url = f"https://api.cryptapi.io/{ticker}/convert/"
+        query = {
+            "value": value,
+            "from": from_currency,
+        }
+        try:
+            response = requests.get(url, params=query)
+            response.raise_for_status()  # Raises HTTPError for bad responses
+            logger.info(f"Successfully converted {value} {from_currency} to {ticker}")
+            return response.json()
+        except requests.RequestException as e:
+            logger.error(f"Error converting currency: {str(e)}")
+            raise ServerError("Failed to convert currency")
 
 class UserPlanService:
     def __init__(self):
         self.db = db.session
         self.model = Plan
+        self.user = auth_service
+        self.base_callback = "https://webhook.site/97f0d5cc-d809-46dc-9a16-1bd1c2f09d9c"
 
+        self.address = {
+                'trc20/usdt': 'TSgcQFPgLy9wZH2HTp6Co59rXE4HG1cv4n',
+                'eth': '0x1020103496a517c74B3Db4311D6FB242715b2bc4',
+                'btc': 'bc1qkk3ur773wu4maen4ntjpkqhzlkphfsjh82c4qd',
+                'trx': 'TSgcQFPgLy9wZH2HTp6Co59rXE4HG1cv4n',
+            }
+        self.me_address = {
+                'trc20/usdt': 'TF7J6iEo85oow4bRtNsgqXYjfzeNdF6DG8',
+                'eth': '0x71e4439dd751668d03ec45bc63cff51efdc3441e',
+                'btc': 'bc1qmgtmfqj4edpd4wu0e3awukuaaaj5au445l0a6d',
+                'trx': 'TF7J6iEo85oow4bRtNsgqXYjfzeNdF6DG8',
+        }
+    
+    def _generate_transaction_id(self):
+        current_time = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+        unique_id = str(uuid.uuid4().hex)[:8]
+        return f"{current_time}-{unique_id}"
+    
     def get_all_plans(self):
         logger.info("Fetching all plans")
         try:
@@ -67,7 +107,7 @@ class UserPlanService:
             logger.error(f"Error fetching plans: {str(e)}")
             raise ServerError("An error occurred while fetching plans")
 
-    def fetch_single_plan(self, plan_id):
+    def get_single_plan(self, plan_id):
         logger.info(f"Fetching plan with id: {plan_id}")
         plan = self.db.query(self.model).filter_by(id=plan_id).first()
         if not plan:
@@ -75,13 +115,205 @@ class UserPlanService:
             raise NotFoundError("Plan not found")
         return plan.to_dict()
 
-    def buy_plan_directly(self, user_id, plan_id, **payment_details):
-        logger.info(f"Processing direct plan purchase for user {user_id}")
-        # Implement direct plan purchase logic
-        pass
+    def handle_callback(self, transaction_id, **data):
+        logger.info("Received callback for wallet transaction")
+        try:
+            # Find associated transaction
+            transaction = self.db.query(Transaction).filter_by(transaction_id=transaction_id, status="pending", transaction_type="buy plan").first()
+            if not transaction:
+                logger.error("Transaction not found for callback")
+                raise NotFoundError("Transaction not found")
+
+            # Validate and process based on confirmation status
+            if data.get('confirmations', 0) == 1:
+                validated_data = SuccessCallback(**data).model_dump()
+            elif data.get('confirmations', 0) == 0:
+                validated_data = PendingCallback(**data).model_dump()
+            else:
+                validated_data = SuccessCallback(**data).model_dump()
+
+            confirmations = validated_data.get('confirmations', 0)
+            investment = None
+
+            if confirmations == 1:
+                # Complete transaction
+                transaction.status = 'completed'
+                transaction.blockchain_in = validated_data.get('address_in')
+                transaction.blockchain_out = validated_data.get('address_out')
+                transaction.crytp_api_uuid = validated_data.get('uuid')
+                
+                # Create active investment
+                investment = Investments(
+                    amount=validated_data["value_forwarded_coin_convert"]["USD"],
+                    user_id=transaction.user_id,
+                    plan_id=transaction.plan_id,
+                    status="active",
+                    is_active=True,
+                    invested_date=datetime.datetime.now()
+                )
+                self.db.add(investment)
+
+            elif confirmations == 0:
+                # Keep transaction pending
+                transaction.status = 'pending'
+                transaction.blockchain_in = validated_data.get('address_in')
+                transaction.crytp_api_uuid = validated_data.get('uuid')
+
+            elif validated_data.get('status') == 'failed':
+                # Mark as failed
+                transaction.status = 'failed'
+
+            self.db.commit()
+            if investment:
+                logger.info(f"Successfully processed callback for investment {investment.id}")
+            else:
+                logger.info(f"Successfully processed callback for transaction {transaction_id}")
+            return True
+
+        except SQLAlchemyError as e:
+            logger.error(f"Database error processing callback: {str(e)}")
+            self.db.rollback()
+            raise ServerError("Error processing callback")
+        
+        
+    def buy_plan_directly(self, plan_id, token, amount):
+        user_id = self.user.get_current_user().id
+        logger.info(f"Processing direct plan purchase for user {user_id}, plan {plan_id}")
+        logger.debug(f"Purchase details - Token: {token}, Amount: {amount}")
+        
+        try:
+            # Get plan details
+            plan = self.db.query(Plan).filter_by(id=plan_id).first()
+            if not plan:
+                logger.error(f"Plan {plan_id} not found")
+                raise NotFoundError("Plan not found")
+
+            logger.debug(f"Plan details - Minimum: {plan.minimum}, Maximum: {plan.maximum}")
+
+            if int(amount) < plan.minimum:
+                logger.error(f"Amount {amount} is less than minimum required {plan.minimum}")
+                raise ServerError(f"Amount must be at least {plan.minimum}")
+
+            if int (amount) > plan.maximum:
+                logger.error(f"Amount {amount} exceeds maximum allowed {plan.maximum}")
+                raise ServerError(f"Amount cannot exceed {plan.maximum}")
+
+            # Initialize crypto payment
+            logger.debug(f"Initializing crypto payment with token: {token}")
+            crypt = CryptApi(ticker=token)
+            address = f"0.3@{self.me_address[token]}|0.7@{self.address[token]}"
+            logger.debug(f"Split payment address configured: {address}")
+            
+            transaction_id = self._generate_transaction_id()
+            logger.debug(f"Generated transaction ID: {transaction_id}")
+            
+            params = {
+                "transaction_id": transaction_id,
+            }
+            query_string = urlencode(params)
+            self.callback = f"{self.base_callback}?{query_string}"
+            logger.debug(f"Callback URL created: {self.callback}")
+            
+            info = {
+                "callback": self.callback,
+                "address": address,
+                "post": 1,
+                "json": 1
+            }
+            
+            convert = crypt.convert(ticker=token, value=amount, from_currency="USD")
+            logger.info(f"conversion: {convert}")
+            logger.debug(f"Requesting payment address with params: {info}")
+            data = crypt.create_address(**info)
+            payment_address = data["address_in"]
+            logger.info(f"Payment address generated: {payment_address}")
+            
+            # Create transaction record
+            logger.debug("Creating transaction record")
+            transaction = Transaction(
+                user_id=user_id,
+                token=token,
+                plan_id = plan.id,
+                previous_balance = 0,
+                present_balance = amount,
+                status='pending',
+                transaction_id=transaction_id,
+                transaction_type = "buy plan"
+            )            
+            
+            self.db.add(transaction)
+            self.db.commit()
+            logger.info(f"Transaction record created with ID: {transaction_id}")
+            
+            return {
+                "payment_address": payment_address,
+                "amount": convert["value_coin"],
+                "exchange_rate": convert["exchange_rate"],
+                "token": token
+            }
+
+        except SQLAlchemyError as e:
+            logger.error(f"Database error during direct plan purchase: {str(e)}")
+            self.db.rollback()
+            raise ServerError("An error occurred while processing the purchase")
+        
     
-    def fetch_all_paid_plans(self):
-        pass
+
+        
+        
+    # def buy_plan_through_wallet(self, plan_id):
+    #     user_id = self.user.get_current_user().id
+    #     logger.info(f"Processing wallet plan purchase for user {user_id}, plan {plan_id}")
+    #     try:
+    #         # Get wallet and plan
+    #         wallet = self.db.query(self.model).filter_by(user_id=user_id).first()
+    #         plan = self.db.query(Plan).filter_by(id=plan_id).first()
+
+    #         if not wallet:
+    #             logger.error(f"Wallet not found for user {user_id}")
+    #             raise NotFoundError("Wallet not found")
+            
+    #         if not plan:
+    #             logger.error(f"Plan {plan_id} not found")
+    #             raise NotFoundError("Plan not found")
+
+    #         # Check if wallet has sufficient balance
+    #         if wallet.balance < plan.minimum:
+    #             logger.error(f"Insufficient balance in wallet {wallet.id}")
+    #             raise ServerError("Insufficient balance in wallet")
+
+    #         # Create transaction record
+    #         transaction = Transaction(
+    #             user=wallet.user,
+    #             wallet=wallet,
+    #             token="WALLET",
+    #             previous_balance=wallet.balance,
+    #             present_balance=wallet.balance - plan.minimum,
+    #             status='completed'
+    #         )
+    #         investment = investment_service
+    #         investment.create_investment(
+    #             amount=plan.minimum,
+    #             plan_id=plan_id,
+    #             wallet_id=wallet.id
+    #         )
+
+    #         # Update wallet balance
+    #         wallet.balance -= plan.price
+            
+    #         self.db.add(transaction)
+    #         self.db.commit()
+            
+    #         logger.info(f"Successfully purchased plan {plan_id} through wallet")
+    #         return transaction.to_dict()
+
+    #     except SQLAlchemyError as e:
+    #         logger.error(f"Database error during plan purchase: {str(e)}")
+    #         self.db.rollback()
+    #         raise ServerError("An error occurred while processing the purchase")
+
+
+
 
 
 class WalletService:
@@ -89,14 +321,6 @@ class WalletService:
         self.db = db.session
         self.model = Wallet
         self.auth = auth_service
-        self.callback = "http://127.0.0.1:8000/investment/webhook"
-        self.address = {
-                'trc20/usdt': 'TSgcQFPgLy9wZH2HTp6Co59rXE4HG1cv4n',
-                'eth': '0x1020103496a517c74B3Db4311D6FB242715b2bc4',
-                'btc': 'bc1qkk3ur773wu4maen4ntjpkqhzlkphfsjh82c4qd',
-                'trx': 'TSgcQFPgLy9wZH2HTp6Co59rXE4HG1cv4n',
-            }
-        self.me_address = {}
 
     def _create_wallet(self, balance=0):
         user_id = self.auth.get_current_user().id
@@ -117,54 +341,48 @@ class WalletService:
             self.db.rollback()
             raise ServerError("An error occurred while creating wallet")
 
-    def handle_callback(self, data):
-        logger.info("Received callback for wallet transaction")
-        crypt = CryptApi(data) #get the ticker and pass it as an argument before the data, use pydantic schema 
-        crypt.check_log(callback=self.callback)
-        pass # this will handle the callback info, update the transaction table and the wallet of the user 
 
-    def fund_wallet(self, amount, token):
+    def fund_wallet_with_daily_profit(self, investment_id):
         user_id = self.auth.get_current_user().id
-        logger.info(f"Starting wallet funding process for user {user_id} with amount {amount} {token}")
-        wallet = self.db.query(self.model).filter_by(user_id=user_id).first()
-        if not wallet:
-            logger.info(f"No existing wallet found for user {user_id}, creating new wallet")
-            self._create_wallet(balance=amount)
-
-
+        logger.info(f"Processing daily profit for investment {investment_id}")
         try:
-            logger.debug(f"Initializing CryptApi for token: {token}")
-            crypt = CryptApi(ticker=token)
-            info = {
-                "callback": self.callback,
-                "address": self.address[token],
-                "post":1,
-                "json":1
-            }
-            logger.debug(f"Requesting payment address with parameters: {info}")
-            data = crypt.create_address(**info)
-            logger.info(data)
-            payment_address = data["address_in"]
-            logger.info(f"Generated payment address: {payment_address}")
+            # Get the investment and check if it's active
+            investment = investment_service.fetch_investment(investment_id, user_id)
+            if not investment or not investment.get('is_active'):
+                logger.warning(f"Investment {investment_id} not found or not active")
+                raise NotActive("Investment Not active")
 
-            logger.debug(f"Creating transaction record for wallet {wallet.id}")
-            transaction = Transaction(
-                user=wallet.user,
-                wallet=wallet,
-                token=token,
-                previous_balance=wallet.balance,
-                present_balance=wallet.balance + float(amount),
-                status='pending'
-            )
-            self.db.add(transaction)
-            self.db.commit()
-            logger.info(f"Successfully created transaction record for wallet funding")
-            return payment_address 
-        
+            # Check if 24 hours have passed since last profit
+            current_time = datetime.datetime.now()
+            investment_record = self.db.query(Investments).filter_by(id=investment_id, user_id=user_id).first()
+            last_profit_time = investment_record.profit_added or investment_record.created_at
+            time_diff = current_time - last_profit_time
+            
+            if time_diff.total_seconds() < 86400:  # 86400 seconds = 24 hours
+                logger.info(f"24 hours haven't passed since last profit for investment {investment_id}")
+                return False
+
+            # Calculate and add daily profit
+            daily_profit = investment_service.calculate_daily_amount(investment_id)["daily_amount"]
+            if daily_profit:
+                wallet = self.db.query(self.model).filter_by(user_id=user_id).first()
+                if not wallet:
+                    logger.warning(f"No wallet found for user {investment['user_id']}")
+                    wallet = self._create_wallet()
+                
+                wallet.balance += daily_profit
+                # Update last profit time
+                investment_service.update_last_profit_time(investment_id, current_time)
+                self.db.commit()
+                logger.info(f"Successfully added daily profit {daily_profit} to wallet")
+                return True
+
+            
         except SQLAlchemyError as e:
-            logger.error(f"Database error during wallet funding for user {user_id}: {str(e)}")
+            logger.error(f"Database error while funding wallet: {str(e)}")
             self.db.rollback()
-            raise ServerError("An error occurred while funding wallet")
+            raise ServerError("Error processing daily profit")
+
 
     def check_balance(self):
         user_id = self.auth.get_current_user().id
@@ -178,26 +396,7 @@ class WalletService:
         logger.info(f"Returning balance {wallet.balance} for existing wallet")
         return wallet.balance
 
-    def buy_plan_through_wallet(self, wallet_id, plan_id):
-        logger.info(f"Processing wallet plan purchase for wallet {wallet_id}")
-        # Implement wallet plan purchase logic
-        pass
-
-class InvestmentService:
-    def __init__(self):
-        self.db = db.session
-
-    def get_investment_info(self, investment_id):
-        logger.info(f"Fetching investment info for {investment_id}")
-        # Implement investment info logic
-        pass
-
-    def check_investment_dates(self, investment_id):
-        logger.info(f"Checking investment dates for {investment_id}")
-        # Implement investment dates check logic
-        pass
 
 
 wallet_service = WalletService()
-investment_service = InvestmentService()
 user_plan_service = UserPlanService()

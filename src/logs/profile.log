@@ -1,5 +1,10 @@
-2025-04-08 17:25:27,514 - v1.profiles.service - INFO - Successfully fetched details for user 2
-2025-04-08 17:27:56,693 - v1.profiles.routes - INFO - Received profile update request with data: {'city': 'calabar'}
-2025-04-08 17:27:56,695 - v1.profiles.service - INFO - {'city': 'calabar'}
-2025-04-08 17:27:58,093 - v1.profiles.service - INFO - Successfully updated profile for user 2
-2025-04-08 17:27:58,093 - v1.profiles.routes - INFO - Successfully updated profile for user
+2025-04-25 14:06:20,049 - v1.profiles.routes - INFO - Received plan purchase request with data: {'amount': 1000, 'plan_id': 1, 'token': 'btc'}
+2025-04-25 14:08:27,900 - v1.profiles.routes - INFO - Received plan purchase request with data: {'token': 'btc', 'amount': 1000.0}
+2025-04-25 22:05:57,626 - v1.profiles.routes - INFO - Received plan purchase request with data: {'token': 'btc', 'amount': 1000.0, 'plan_id': 1}
+2025-04-25 22:11:27,576 - v1.profiles.routes - INFO - Received plan purchase request with data: {'token': 'btc', 'amount': 1000.0, 'plan_id': 1}
+2025-04-25 22:13:23,981 - v1.profiles.routes - INFO - Received plan purchase request with data: {'token': 'btc', 'amount': 1000.0, 'plan_id': 1}
+2025-04-25 22:22:20,224 - v1.profiles.routes - INFO - Received plan purchase request with data: {'token': 'btc', 'amount': 1000.0, 'plan_id': 1}
+2025-04-25 22:56:31,628 - v1.profiles.routes - INFO - Received plan purchase request with data: {'token': 'btc', 'amount': 1000.0, 'plan_id': 1}
+2025-04-25 22:56:39,646 - v1.profiles.routes - ERROR - Server error: An error occurred while processing the purchase
+2025-04-25 23:03:40,976 - v1.profiles.routes - INFO - Received plan purchase request with data: {'token': 'btc', 'amount': 1000.0, 'plan_id': 1}
+2025-04-25 23:04:36,917 - v1.profiles.routes - INFO - Received plan purchase request with data: {'token': 'btc', 'amount': 1000.0, 'plan_id': 1}

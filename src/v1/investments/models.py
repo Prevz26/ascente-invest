@@ -9,9 +9,10 @@ class Investments(BaseModel):
     __tablename__ = 'investments'
     id = Column(Integer, primary_key=True, unique=True, autoincrement=True)
     amount = Column(Integer, nullable=False)
-    
+    status = Column(String(20), nullable=False, default='active')
     invested_date = Column(DateTime, nullable=True)
     last_viewed = Column(DateTime, nullable=True)
+    profit_added = Column(DateTime, nullable=True)
 
     user_id = Column(Integer, ForeignKey('users.id'))
     user = relationship('User', backref='investments')
@@ -20,7 +21,8 @@ class Investments(BaseModel):
     wallet = relationship('Wallet', backref='investments')
 
     plan_id = Column(Integer, ForeignKey('plans.id'))
-    plan = relationship('Plans', backref='investments')
+    plan = relationship('Plan', backref='investments')
+    is_active = Column(Boolean, default=False)
 
     @hybrid_property
     def maturity_date(self):
@@ -36,22 +38,32 @@ class Investments(BaseModel):
         time_struct, status = cal.parse(duration_str, self.invested_date.timetuple())
         if status == 1:
             maturity_date = datetime.datetime(*time_struct[:6])
-            return maturity_date.strftime("%d/%m/%Y")
+            return {
+                "maturity date": maturity_date.strftime("%d/%m/%Y"), 
+                "date": maturity_date
+                }
         else:
             raise ValueError("Could not parse duration")
 
-
+    @hybrid_property
+    def is_matured(self):
+        """Check if investment is matured"""
+        if not self.maturity_date:
+            return False
+        return datetime.datetime.now() >= self.maturity_date
 
     @hybrid_property
     def profit(self):
         """Calculate profit"""
-        return (self.amount * self.plan.rate_of_return)
+        get_profit = self.amount * self.plan.rate_of_return
+        return get_profit
 
     @hybrid_property
     def total_payout(self):
         """Calculate total payout (Investment + Profit)"""
         return self.amount + self.profit
     
+
 
     def to_dict(self):
         return {

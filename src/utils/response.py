@@ -21,24 +21,27 @@ class CustomResponse:
         status: str,
         message: str,
         data: Optional[Any] = None,
-        status_code: int = 200
+        status_code: int = 200,
+        role:str = None,
     ) -> Tuple[Dict[str, Any], int]:
         
         response = {
             'status': status,
             'message': message,
             'data': data,
+            "role":role
         }
         return response, status_code
 
     def success_response(
         self,
+        role:str = None,
         message: str = SUCCESS,
         data: Optional[Any] = None,
         status_code: int = 200,
     ) -> Tuple[Dict[str, Any], int]:
         """Create a success response"""
-        return self._create_response('success', message, data, status_code)
+        return self._create_response('success', message, data, status_code, role)
     
 
 

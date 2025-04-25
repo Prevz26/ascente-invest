@@ -1,7 +1,7 @@
 
 from celery import Celery, Task
 import os
-import yaml
+# import yaml
 from typing import Dict, Any
 from datetime import timedelta
 import os
@@ -99,55 +99,55 @@ def celery_init_app(app) -> Celery:
     return celery_app
 
 
-def load_and_merge_swagger_files(output_file=None) -> Dict[str, Any]:
-    """Loads and merges all swagger YAML files from docs directory into single swagger spec."""
-    docs_dir = os.path.join(os.path.dirname(__file__), '..', 'docs')
-    merged_spec = {
-        'openapi': '3.0.0',
-        'info': {'title': 'Investment API', 'version': '1.0.0'},
-        'paths': {},
-        'components': {'schemas': {}, 'securitySchemes': {}}
-    }
+# def load_and_merge_swagger_files(output_file=None) -> Dict[str, Any]:
+#     """Loads and merges all swagger YAML files from docs directory into single swagger spec."""
+#     docs_dir = os.path.join(os.path.dirname(__file__), '..', 'docs')
+#     merged_spec = {
+#         'openapi': '3.0.0',
+#         'info': {'title': 'Investment API', 'version': '1.0.0'},
+#         'paths': {},
+#         'components': {'schemas': {}, 'securitySchemes': {}}
+#     }
 
-    def merge_component(source, target, component_type):
-        if source.get('components', {}).get(component_type):
-            target['components'][component_type].update(source['components'][component_type])
+#     def merge_component(source, target, component_type):
+#         if source.get('components', {}).get(component_type):
+#             target['components'][component_type].update(source['components'][component_type])
 
-    if not os.path.exists(docs_dir):
-        return merged_spec
+#     if not os.path.exists(docs_dir):
+#         return merged_spec
 
-    for filename in os.listdir(docs_dir):
-        if not filename.endswith('.yml'):
-            continue
+#     for filename in os.listdir(docs_dir):
+#         if not filename.endswith('.yml'):
+#             continue
             
-        try:
-            with open(os.path.join(docs_dir, filename)) as f:
-                spec = yaml.safe_load(f) or {}
+#         try:
+#             with open(os.path.join(docs_dir, filename)) as f:
+#                 spec = yaml.safe_load(f) or {}
                 
-                # Convert to OpenAPI 3.0 if needed
-                if 'swagger' in spec:
-                    spec['openapi'] = '3.0.0'
-                    del spec['swagger']
+#                 # Convert to OpenAPI 3.0 if needed
+#                 if 'swagger' in spec:
+#                     spec['openapi'] = '3.0.0'
+#                     del spec['swagger']
 
-                # Merge paths and components
-                if spec.get('paths'):
-                    merged_spec['paths'].update(spec['paths'])
+#                 # Merge paths and components
+#                 if spec.get('paths'):
+#                     merged_spec['paths'].update(spec['paths'])
                 
-                merge_component(spec, merged_spec, 'schemas')
-                merge_component(spec, merged_spec, 'securitySchemes')
+#                 merge_component(spec, merged_spec, 'schemas')
+#                 merge_component(spec, merged_spec, 'securitySchemes')
                 
-                # Handle legacy Swagger 2.0 definitions
-                if spec.get('definitions'):
-                    merged_spec['components']['schemas'].update(spec['definitions'])
+#                 # Handle legacy Swagger 2.0 definitions
+#                 if spec.get('definitions'):
+#                     merged_spec['components']['schemas'].update(spec['definitions'])
                     
-        except Exception as e:
-            print(f"Error processing {filename}: {str(e)}")
+#         except Exception as e:
+#             print(f"Error processing {filename}: {str(e)}")
 
-    if output_file:
-        try:
-            with open(output_file, 'w') as f:
-                yaml.dump(merged_spec, f, sort_keys=False)
-        except Exception as e:
-            print(f"Error writing to {output_file}: {str(e)}")
+#     if output_file:
+#         try:
+#             with open(output_file, 'w') as f:
+#                 yaml.dump(merged_spec, f, sort_keys=False)
+#         except Exception as e:
+#             print(f"Error writing to {output_file}: {str(e)}")
 
-    return merged_spec
+#     return merged_spec

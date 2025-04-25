@@ -1,17 +1,10 @@
-2025-04-08 17:02:13,329 - utils.exceptions - ERROR - 1 validation error for RequestCryptApiSchema
-email
-  Field required [type=missing, input_value={'callback': 'http://127....', 'post': 1, 'json': 1}, input_type=dict]
-    For further information visit https://errors.pydantic.dev/2.10/v/missing
-2025-04-08 17:15:12,066 - utils.exceptions - ERROR - (psycopg2.OperationalError) server closed the connection unexpectedly
-	This probably means the server terminated abnormally
-	before or while processing the request.
-server closed the connection unexpectedly
-	This probably means the server terminated abnormally
-	before or while processing the request.
+2025-04-25 12:03:08,466 - utils.exceptions - ERROR - Error creating backref 'transactions' on relationship 'Transaction.plan': property of that name exists on mapper 'Mapper[Plan(plans)]'
+2025-04-25 12:04:51,383 - utils.exceptions - ERROR - When initializing mapper Mapper[Investments(investments)], expression 'Plans' failed to locate a name ('Plans'). If this is a class name, consider adding this relationship() to the <class 'v1.investments.models.Investments'> class after both dependent classes have been defined.
+2025-04-25 12:51:57,992 - utils.exceptions - ERROR - The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2025-04-25 22:04:03,342 - utils.exceptions - ERROR - (psycopg2.OperationalError) could not translate host name "pg-19003947-ojogu.b.aivencloud.com" to address: Temporary failure in name resolution
 
-[SQL: SELECT users.id AS users_id, users.username AS users_username, users.fullname AS users_fullname, users.email AS users_email, users.password AS users_password, users.referral_id AS users_referral_id, users.first_name AS users_first_name, users.last_name AS users_last_name, users.date_of_birth AS users_date_of_birth, users.bio AS users_bio, users.country AS users_country, users.city AS users_city, users.address AS users_address, users.is_admin AS users_is_admin, users.is_fully_registered AS users_is_fully_registered, users.mobile_number AS users_mobile_number, users.street1 AS users_street1, users.street2 AS users_street2, users.state AS users_state, users.zip_code AS users_zip_code, users.emergency_contact_name AS users_emergency_contact_name, users.emergency_contact_number AS users_emergency_contact_number, users.preferred_contact_method AS users_preferred_contact_method, users.unique_id AS users_unique_id, users.created_at AS users_created_at, users.updated_at AS users_updated_at 
-FROM users 
-WHERE users.unique_id = %(unique_id_1)s::UUID 
- LIMIT %(param_1)s]
-[parameters: {'unique_id_1': 'df4c3777-dd9f-4b75-9c0c-d06e997847f6', 'param_1': 1}]
 (Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-04-25 22:13:32,820 - utils.exceptions - ERROR - 1 validation error for ResponseCryptApiSchema
+address_out
+  Input should be a valid string [type=string_type, input_value={'bc1qmgtmfqj4edpd4wu0e3a...phfsjh82c4qd': '0.7000'}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/string_type

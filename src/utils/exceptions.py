@@ -116,3 +116,6 @@ class DatabaseError(Exception):
 
 class ServerError(Exception):
     pass 
+
+class NotActive(Exception):
+    pass 

@@ -15,6 +15,8 @@ class Plan(BaseModel):
     minimum = sa.Column(sa.Integer, nullable=False)
     maximum = sa.Column(sa.Integer, nullable=True)
 
+    
+    
     @property
     def amount_to_receive(self):
         return f"Capital * {self.rate_of_return}"
@@ -75,6 +77,8 @@ class TransactionStatus(enum.Enum):
 class Transaction(BaseModel):
     __tablename__ = "transactions"
     id = sa.Column(sa.Integer, primary_key=True, unique=True, autoincrement=True)
+    transaction_id = sa.Column(sa.String(200),  unique=True)
+    transaction_type = sa.Column(sa.String, nullable=False)
     token = sa.Column(sa.String, nullable=False)
     previous_balance = sa.Column(sa.Float, default=0.0)
     present_balance = sa.Column(sa.Float, default=0.0)
@@ -90,8 +94,10 @@ class Transaction(BaseModel):
     #foreign key and relationships 
     user_id = sa.Column(sa.Integer, sa.ForeignKey('users.id'))
     wallet_id = sa.Column(sa.Integer, sa.ForeignKey('wallets.id'))
+    plan_id = sa.Column(sa.Integer, sa.ForeignKey('plans.id'))
     user = sa.orm.relationship('User', backref='transactions')
     wallet = sa.orm.relationship('Wallet', backref='transactions')
+    plan = sa.orm.relationship('Plan', backref='transactions')
 
 
     def to_dict(self):
