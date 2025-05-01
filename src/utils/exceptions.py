@@ -1,3 +1,4 @@
+import os
 from flask import Blueprint
 from pydantic import ValidationError
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
@@ -11,8 +12,12 @@ exception_logger = logging.getLogger(__name__)
 #create custom config for the exception logger
 exception_logger.setLevel(logging.ERROR)
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+# Get the absolute path to the `logs` directory inside `src`
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))  # this resolves to src/utils
+LOG_DIR = os.path.join(BASE_DIR, '..', 'logs')
+os.makedirs(LOG_DIR, exist_ok=True)
 
-file_handler = logging.FileHandler('logs/error.log')
+file_handler = logging.FileHandler(os.path.join(LOG_DIR, 'error.log'))
 console_handler = logging.StreamHandler()
 
 file_handler.setFormatter(formatter)

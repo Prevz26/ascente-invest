@@ -9,6 +9,7 @@ from utils.exceptions import AlreadyExistsError, ServerError, NotFoundError
 from pydantic import ValidationError
 from utils.decorators import admin_required
 from sqlalchemy.exc import SQLAlchemyError
+from utils.log import get_log_path
 admin_bp = Blueprint("admin", __name__, url_prefix="/investment/admin")
 api = Api(admin_bp)
 
@@ -17,7 +18,7 @@ admin_logger = logging.getLogger(__name__)
 admin_logger.setLevel(logging.INFO)
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
-file_handler = logging.FileHandler('logs/admin.log')
+file_handler = logging.FileHandler(get_log_path('admin.log'))
 file_handler.setFormatter(formatter)
 admin_logger.addHandler(file_handler)
 

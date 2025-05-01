@@ -4,6 +4,7 @@ from flask_jwt_extended import jwt_required
 from flask_restful import Api, Resource
 from .service import auth_service
 from utils.response import custom_response
+from utils.log import get_log_path
 from .schema import RegistrationSchema, LoginSchema
 from utils.exceptions import AlreadyExistsError, NotFoundError, InvalidEmailPassword, TokenExpired
 from pydantic import ValidationError 
@@ -17,7 +18,7 @@ auth_logger = logging.getLogger(__name__)
 auth_logger.setLevel(logging.INFO)
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
-file_handler = logging.FileHandler('logs/auth.log')
+file_handler = logging.FileHandler(get_log_path('auth.log'))
 file_handler.setFormatter(formatter)
 auth_logger.addHandler(file_handler)
 

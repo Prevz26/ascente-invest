@@ -4,12 +4,14 @@ from utils.dependency import db
 from v1.auth.service import auth_service
 from utils.exceptions import AlreadyExistsError, ServerError, NotFoundError
 from sqlalchemy.exc import SQLAlchemyError
+from utils.log import get_log_path
+
 # Setup logging
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
-file_handler = logging.FileHandler('logs/admin.log')
+file_handler = logging.FileHandler(get_log_path('admin.log'))
 file_handler.setFormatter(formatter)
 logger.addHandler(file_handler)
 

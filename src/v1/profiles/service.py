@@ -4,6 +4,7 @@ from v1.auth.service import auth_service
 from utils.dependency import db 
 from utils.exceptions import NotFoundError, BadRequest, DatabaseError
 import logging 
+from utils.log import get_log_path
 from sqlalchemy.exc import SQLAlchemyError
 
 # Setup logging
@@ -11,7 +12,7 @@ profile_logger = logging.getLogger(__name__)
 profile_logger.setLevel(logging.INFO)
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
-file_handler = logging.FileHandler('logs/profile.log')
+file_handler = logging.FileHandler(get_log_path('profile.log'))
 file_handler.setFormatter(formatter)
 profile_logger.addHandler(file_handler)
 

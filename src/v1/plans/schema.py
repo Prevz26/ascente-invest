@@ -1,6 +1,7 @@
+from datetime import datetime
 from pydantic import BaseModel, field_validator, Field, EmailStr
 from typing import Optional, Literal
-
+import enum
 class RequestPlan(BaseModel):
     name: str
     duration: str
@@ -16,6 +17,23 @@ class RequestPlan(BaseModel):
             raise ValueError("Cannot be less than zero")
         return value
 
+class Balance(BaseModel):
+    balance: float
+    
+class DailyProfit(BaseModel):
+    duration_days: datetime
+    daily_amount: float
+
+class InvestmentProfit(BaseModel):
+    investment_id: int
+    daily_profit: list[DailyProfit]
+    total_profit: float
+    
+class CheckPayment(BaseModel):
+    status: str
+    transaction_id: str
+    transaction_type: str
+    token: str
 
 class ResponsePlan(BaseModel):
     id:int 
@@ -129,14 +147,14 @@ class SuccessCallback(BaseModel):
     value_coin: float = Field(
         description="Payment amount before fees"
     )
-    value_coin_convert: Optional[str] = Field(
+    value_coin_convert: Optional[dict] = Field(
         default=None,
         description="JSON-encoded FIAT currency conversions of value_coin"
     )
     value_forwarded_coin: float = Field(
         description="Payment amount after fees"
     )
-    value_forwarded_coin_convert: Optional[str] = Field(
+    value_forwarded_coin_convert: Optional[dict] = Field(
         default=None,
         description="JSON-encoded FIAT currency conversions of value_forwarded_coin"
     )
@@ -166,11 +184,17 @@ class PendingCallback(BaseModel):
     "txid_out": "0xfedcba9876543210fedcba9876543210fedcba98",
     "confirmations": 12,
     "value_coin": 1.23456789,
-    "value_coin_convert": "{\"USD\":123.45,\"EUR\":103.45}",
-    "value_forwarded_coin": 1.20000000,
-    "value_forwarded_coin_convert": "{\"USD\":120.00,\"EUR\":100.80}",
+    "value_coin_convert": {
+        "USD": 123.45,
+        "EUR": 103.45
+    },
+    "value_forwarded_coin": 1.2,
+    "value_forwarded_coin_convert": {
+        "USD": 120.0,
+        "EUR": 100.8
+    },
     "fee_coin": 0.03456789,
     "coin": "eth",
-    "price": 1850.50,
+    "price": 1850.5,
     "pending": 0
 }

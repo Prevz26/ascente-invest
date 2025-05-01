@@ -10,10 +10,10 @@ class Plan(BaseModel):
     id = sa.Column(sa.Integer, primary_key=True, unique=True, autoincrement=True)
     name = sa.Column(sa.String(30), nullable=False, unique=True)
     duration = sa.Column(sa.String, nullable=False)
-    rate_of_return = sa.Column(sa.DECIMAL(10,2), nullable=False)
+    rate_of_return = sa.Column(sa.Numeric(10,2), nullable=False)
     status = sa.Column(sa.String(20), nullable=False, default='active')
-    minimum = sa.Column(sa.Integer, nullable=False)
-    maximum = sa.Column(sa.Integer, nullable=True)
+    minimum = sa.Column(sa.Numeric(10,2), nullable=False)
+    maximum = sa.Column(sa.Numeric(10,2), nullable=True)
 
     
     
@@ -46,7 +46,7 @@ class TokenType(enum.Enum):
 class Wallet(BaseModel):
     __tablename__ = "wallets"
     id = sa.Column(sa.Integer, primary_key=True, unique=True, autoincrement=True)
-    balance = sa.Column(sa.Float, default=0.0, nullable=False) #usd 
+    balance = sa.Column(sa.Numeric(10,2), default=0.0, nullable=False) #usd 
 
 
     user_id = sa.Column(sa.Integer, sa.ForeignKey('users.id'), unique=True, nullable=False)
@@ -80,8 +80,8 @@ class Transaction(BaseModel):
     transaction_id = sa.Column(sa.String(200),  unique=True)
     transaction_type = sa.Column(sa.String, nullable=False)
     token = sa.Column(sa.String, nullable=False)
-    previous_balance = sa.Column(sa.Float, default=0.0)
-    present_balance = sa.Column(sa.Float, default=0.0)
+    previous_balance = sa.Column(sa.Numeric(10,2), default=0.0)
+    present_balance = sa.Column(sa.Numeric(10,2), default=0.0)
     status = sa.Column(
         sa.Enum(TransactionStatus),
         nullable=False,
@@ -103,6 +103,9 @@ class Transaction(BaseModel):
     def to_dict(self):
         return {
             'id': self.id,
+            "transaction_id": self.transaction_id,
+            "transaction_type": self.transaction_type,
+            "token": self.token,
             'user_id': self.user_id,
             'wallet_id': self.wallet_id,
             'previous_balance': self.previous_balance,

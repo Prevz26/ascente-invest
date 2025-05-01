@@ -4,6 +4,7 @@ import datetime
 from utils.dependency import db
 from utils.exceptions import NotFoundError, AlreadyExistsError, InvalidEmailPassword, BadRequest, TokenExpired, ServerError
 import utils.dependency
+from utils.log import get_log_path
 import logging 
 from flask_jwt_extended import create_access_token, get_jwt_identity, create_refresh_token
 from v1.profiles.models import User, RefreshToken
@@ -15,7 +16,7 @@ auth_logger = logging.getLogger(__name__)
 auth_logger.setLevel(logging.INFO)
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
-file_handler = logging.FileHandler('logs/auth.log')
+file_handler = logging.FileHandler(get_log_path('auth.log'))
 file_handler.setFormatter(formatter)
 auth_logger.addHandler(file_handler)
 
@@ -156,6 +157,12 @@ class AuthService():
             and_(self.model.unique_id==user_id, self.model.is_admin ==True)
             ).first()
         return admin
+    
+    def check_user(self, user_id):
+        user = self.db.query(self.model).filter(
+            and_(self.model.unique_id==user_id, self.model.is_admin ==False)
+            ).first()
+        return user
         
 
 

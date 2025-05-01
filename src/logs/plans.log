@@ -1,24 +1,16 @@
-2025-04-25 22:56:35,569 - v1.plans.service - INFO - Processing direct plan purchase for user 1, plan 1
-2025-04-25 22:56:35,711 - v1.plans.service - INFO - Converting 1000.0 USD to btc
-2025-04-25 22:56:37,491 - v1.plans.service - INFO - Successfully converted 1000.0 USD to btc
-2025-04-25 22:56:37,491 - v1.plans.service - INFO - conversion: {'status': 'success', 'value_coin': '0.0105628', 'exchange_rate': '0.0000105628'}
-2025-04-25 22:56:37,492 - v1.plans.service - INFO - Creating crypto address for ticker: btc
-2025-04-25 22:56:39,354 - v1.plans.service - INFO - Successfully created address for btc
-2025-04-25 22:56:39,354 - v1.plans.service - INFO - Payment address generated: 3QPLykJc3BuSqraScm5G26PxFYNnQQQPCr
-2025-04-25 22:56:39,645 - v1.plans.service - ERROR - Database error during direct plan purchase: (psycopg2.errors.NumericValueOutOfRange) value "20250425225635-65e44500" is out of range for type integer
-LINE 1: ..., user_id, wallet_id, plan_id, unique_id) VALUES ('202504252...
-                                                             ^
+2025-04-30 18:31:59,883 - v1.plans.service - INFO - Checking wallet balance for user 2
+2025-04-30 18:31:59,883 - v1.plans.service - INFO - Processing daily profit for all active investments for user 2
+2025-04-30 18:32:00,719 - v1.plans.service - INFO - 
+current_time: 2025-04-30 17:32:00.718720+00:00 tzinfo: UTC
+last_profit_time: 2025-04-30 17:17:57.241065+00:00 tzinfo: None
 
-[SQL: INSERT INTO transactions (transaction_id, transcation_type, token, previous_balance, present_balance, status, blockchain_in, blockchain_out, crytp_api_uuid, user_id, wallet_id, plan_id, unique_id) VALUES (%(transaction_id)s, %(transcation_type)s, %(token)s, %(previous_balance)s, %(present_balance)s, %(status)s, %(blockchain_in)s, %(blockchain_out)s, %(crytp_api_uuid)s, %(user_id)s, %(wallet_id)s, %(plan_id)s, %(unique_id)s::UUID) RETURNING transactions.id, transactions.created_at, transactions.updated_at]
-[parameters: {'transaction_id': '20250425225635-65e44500', 'transcation_type': 'buy plan', 'token': 'btc', 'previous_balance': 0, 'present_balance': 1000.0, 'status': 'pending', 'blockchain_in': None, 'blockchain_out': None, 'crytp_api_uuid': None, 'user_id': 1, 'wallet_id': None, 'plan_id': 1, 'unique_id': UUID('90a6056b-6016-4886-b3ab-18aa6e5d73c6')}]
-(Background on this error at: https://sqlalche.me/e/20/9h9h)
-2025-04-25 23:04:37,229 - v1.plans.service - INFO - Processing direct plan purchase for user 3, plan 1
-2025-04-25 23:04:37,398 - v1.plans.service - INFO - Converting 1000.0 USD to btc
-2025-04-25 23:04:40,732 - v1.plans.service - INFO - Successfully converted 1000.0 USD to btc
-2025-04-25 23:04:40,733 - v1.plans.service - INFO - conversion: {'status': 'success', 'value_coin': '0.0105741', 'exchange_rate': '0.0000105741'}
-2025-04-25 23:04:40,733 - v1.plans.service - INFO - Creating crypto address for ticker: btc
-2025-04-25 23:04:42,564 - v1.plans.service - INFO - Successfully created address for btc
-2025-04-25 23:04:42,565 - v1.plans.service - INFO - Payment address generated: 357EV1uAAAACHty58Gz6t32Ahk22CMPRLY
-2025-04-25 23:04:42,864 - v1.plans.service - INFO - Transaction record created with ID: 20250425230437-b32bfca1
-2025-04-25 23:15:40,889 - v1.plans.service - INFO - Received callback for wallet transaction
-2025-04-25 23:15:41,113 - v1.plans.service - ERROR - Database error processing callback: Entity namespace for "transactions" has no property "transcation_id"
+2025-04-30 18:39:00,970 - v1.plans.service - INFO - Processing direct plan purchase for user 1, plan 1
+2025-04-30 18:39:01,166 - v1.plans.service - INFO - Converting 3000.0 USD to btc
+2025-04-30 18:39:03,503 - v1.plans.service - INFO - Successfully converted 3000.0 USD to btc
+2025-04-30 18:39:03,504 - v1.plans.service - INFO - conversion: {'status': 'success', 'value_coin': '0.0319001', 'exchange_rate': '0.0000106334'}
+2025-04-30 18:39:03,504 - v1.plans.service - INFO - Creating crypto address for ticker: btc
+2025-04-30 18:39:37,800 - v1.plans.service - INFO - Successfully created address for btc
+2025-04-30 18:39:37,802 - v1.plans.service - INFO - Payment address generated: 3Eg81a287WdGEy21SJkHD2jri3FZBD7xcR
+2025-04-30 18:39:38,206 - v1.plans.service - INFO - Transaction record created with ID: 20250430183901-4950911a
+2025-04-30 18:44:57,587 - v1.plans.service - INFO - Received callback for wallet transaction
+2025-04-30 18:45:01,680 - v1.plans.service - INFO - Transaction 20250430183901-4950911a processed with status: TransactionStatus.success

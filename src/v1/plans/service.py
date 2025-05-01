@@ -11,13 +11,16 @@ import requests
 from v1.investments.service import investment_service
 from v1.investments.models import Investments
 import uuid
+from sqlalchemy import and_ 
+from v1.plans.models import TransactionStatus
+from utils.log import get_log_path
 
 # Setup logging
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
-file_handler = logging.FileHandler('logs/plans.log')
+file_handler = logging.FileHandler(get_log_path('plans.log'))
 file_handler.setFormatter(formatter)
 logger.addHandler(file_handler)
 
@@ -118,31 +121,60 @@ class UserPlanService:
     def handle_callback(self, transaction_id, **data):
         logger.info("Received callback for wallet transaction")
         try:
+            # Early validation of transaction existence
+            if not transaction_id:
+                logger.error("No transaction ID provided")
+                raise NotFoundError("Transaction ID is required")
+
             # Find associated transaction
-            transaction = self.db.query(Transaction).filter_by(transaction_id=transaction_id, status="pending", transaction_type="buy plan").first()
+            transaction = self.db.query(Transaction).filter(
+                and_(
+                    Transaction.transaction_id == transaction_id,
+                    Transaction.status == TransactionStatus.pending
+                )
+            ).first()
+
             if not transaction:
-                logger.error("Transaction not found for callback")
-                raise NotFoundError("Transaction not found")
+                logger.error("Transaction not found or not in pending state")
+                raise NotFoundError("Transaction not found or already processed")
 
-            # Validate and process based on confirmation status
-            if data.get('confirmations', 0) == 1:
-                validated_data = SuccessCallback(**data).model_dump()
-            elif data.get('confirmations', 0) == 0:
-                validated_data = PendingCallback(**data).model_dump()
-            else:
-                validated_data = SuccessCallback(**data).model_dump()
+            # Early validation of data
+            if not data:
+                logger.error("No callback data provided")
+                raise ServerError("Invalid callback data")
 
-            confirmations = validated_data.get('confirmations', 0)
+            # Prepare base transaction updates
+            transaction.blockchain_in = data.get('address_in')
+            transaction.crytp_api_uuid = data.get('uuid')
+
+            # Handle failed status first
+            if data.get('status') == 'failed':
+                transaction.status = 'failed'
+                self.db.add(transaction)
+                self.db.commit()
+                logger.info(f"Transaction {transaction_id} marked as failed")
+                return True
+
+            # Validate callback data format
+            try:
+                if data.get('confirmations', 0) == 1:
+                    validated_data = SuccessCallback(**data).model_dump()
+                elif data.get('confirmations', 0) == 0:
+                    validated_data = PendingCallback(**data).model_dump()
+                else:
+                    validated_data = SuccessCallback(**data).model_dump()
+            except Exception as e:
+                logger.error(f"Invalid callback data format: {str(e)}")
+                raise ServerError("Invalid callback data format")
+
+            # Determine status and prepare investment if needed
             investment = None
-
-            if confirmations == 1:
-                # Complete transaction
-                transaction.status = 'completed'
-                transaction.blockchain_in = validated_data.get('address_in')
+            if validated_data.get('confirmations', 0) == 0:
+                transaction.status = TransactionStatus.pending
+            else:
+                transaction.status = TransactionStatus.success
+                transaction.amount = validated_data.get('value_forwarded_coin_convert')["USD"]
                 transaction.blockchain_out = validated_data.get('address_out')
-                transaction.crytp_api_uuid = validated_data.get('uuid')
-                
-                # Create active investment
                 investment = Investments(
                     amount=validated_data["value_forwarded_coin_convert"]["USD"],
                     user_id=transaction.user_id,
@@ -151,30 +183,50 @@ class UserPlanService:
                     is_active=True,
                     invested_date=datetime.datetime.now()
                 )
-                self.db.add(investment)
 
-            elif confirmations == 0:
-                # Keep transaction pending
-                transaction.status = 'pending'
-                transaction.blockchain_in = validated_data.get('address_in')
-                transaction.crytp_api_uuid = validated_data.get('uuid')
-
-            elif validated_data.get('status') == 'failed':
-                # Mark as failed
-                transaction.status = 'failed'
-
-            self.db.commit()
+            # Perform all database updates
+            self.db.add(transaction)
             if investment:
-                logger.info(f"Successfully processed callback for investment {investment.id}")
-            else:
-                logger.info(f"Successfully processed callback for transaction {transaction_id}")
+                self.db.add(investment)
+            self.db.commit()
+            
+            logger.info(f"Transaction {transaction_id} processed with status: {transaction.status}")
             return True
+
 
         except SQLAlchemyError as e:
             logger.error(f"Database error processing callback: {str(e)}")
             self.db.rollback()
             raise ServerError("Error processing callback")
+    
+    def check_payment_status(self, transaction_id):
+        user_id = self.user.get_current_user().id
+        logger.info(f"Checking payment status for user {user_id}, transaction {transaction_id}")
+    
+        try:
+            transaction = self.db.query(Transaction).filter_by(transaction_id=transaction_id, user_id=user_id).first()
+            if not transaction:
+                logger.error(f"Transaction {transaction_id} not found")
+                raise NotFoundError("Transaction not found")
+            # logger.info(f"Transaction status: {transaction.status}")
+            transaction_data = transaction.to_dict()
+            # logger.info(f"Transaction data: {transaction_data}")
+            data =  {
+                "status": transaction_data.get("status"),
+                "transaction_id": transaction_data.get("transaction_id"),
+                "transaction_type": transaction_data.get("transaction_type"),
+                "token": transaction_data.get("token"),
+            }
+            logger.info(f"Data to be sent: {data}")
+            return data
         
+        except SQLAlchemyError as e:
+            logger.error(f"Database error checking payment status: {str(e)}")
+            raise ServerError("Error checking payment status")
+        except Exception as e:
+            logger.error(f"Error checking payment status: {str(e)}")
+            raise ServerError("Failed to check payment status")
+
         
     def buy_plan_directly(self, plan_id, token, amount):
         user_id = self.user.get_current_user().id
@@ -236,7 +288,7 @@ class UserPlanService:
                 plan_id = plan.id,
                 previous_balance = 0,
                 present_balance = amount,
-                status='pending',
+                status=TransactionStatus.pending,
                 transaction_id=transaction_id,
                 transaction_type = "buy plan"
             )            
@@ -246,9 +298,13 @@ class UserPlanService:
             logger.info(f"Transaction record created with ID: {transaction_id}")
             
             return {
+                "plan_id": plan.id,
+                "plan_name": plan.name,
+                "transaction_id": transaction_id,
                 "payment_address": payment_address,
-                "amount": convert["value_coin"],
-                "exchange_rate": convert["exchange_rate"],
+                "amount": float(convert["value_coin"]),
+                "exchange_rate": float(convert["exchange_rate"]),
+                "total": float(convert["value_coin"]) + float(convert["exchange_rate"]),
                 "token": token
             }
 
@@ -342,59 +398,102 @@ class WalletService:
             raise ServerError("An error occurred while creating wallet")
 
 
-    def fund_wallet_with_daily_profit(self, investment_id):
-        user_id = self.auth.get_current_user().id
-        logger.info(f"Processing daily profit for investment {investment_id}")
+    def fund_wallet_with_daily_profit(self, user_id):
+        # user_id = self.auth.get_current_user().id   
+        logger.info(f"Processing daily profit for all active investments for user {user_id}")
         try:
-            # Get the investment and check if it's active
-            investment = investment_service.fetch_investment(investment_id, user_id)
-            if not investment or not investment.get('is_active'):
-                logger.warning(f"Investment {investment_id} not found or not active")
-                raise NotActive("Investment Not active")
-
-            # Check if 24 hours have passed since last profit
-            current_time = datetime.datetime.now()
-            investment_record = self.db.query(Investments).filter_by(id=investment_id, user_id=user_id).first()
-            last_profit_time = investment_record.profit_added or investment_record.created_at
-            time_diff = current_time - last_profit_time
-            
-            if time_diff.total_seconds() < 86400:  # 86400 seconds = 24 hours
-                logger.info(f"24 hours haven't passed since last profit for investment {investment_id}")
+            # Fetch all active investments for the user
+            investments = investment_service.fetch_all_investments()
+            if not investments:
+                logger.info(f"No active investments found for user {user_id}")
                 return False
 
-            # Calculate and add daily profit
-            daily_profit = investment_service.calculate_daily_amount(investment_id)["daily_amount"]
-            if daily_profit:
-                wallet = self.db.query(self.model).filter_by(user_id=user_id).first()
-                if not wallet:
-                    logger.warning(f"No wallet found for user {investment['user_id']}")
-                    wallet = self._create_wallet()
-                
-                wallet.balance += daily_profit
-                # Update last profit time
-                investment_service.update_last_profit_time(investment_id, current_time)
-                self.db.commit()
-                logger.info(f"Successfully added daily profit {daily_profit} to wallet")
-                return True
+            updated = False
+            for investment in investments:
+                if not investment.get('is_active'):
+                    logger.info(f"Skipping inactive investment {investment.get('id')}")
+                    continue
 
-            
+                investment_id = investment.get('id')
+                investment_record = self.db.query(Investments).filter_by(id=investment_id, user_id=user_id).first()
+                if not investment_record:
+                    logger.warning(f"Investment record {investment_id} not found in DB")
+                    continue
+
+                current_time = datetime.datetime.now(datetime.timezone.utc)
+                last_profit_time = investment_record.date_profit_added or investment_record.created_at
+                if last_profit_time.tzinfo is None:
+                    last_profit_time = last_profit_time.replace(tzinfo=datetime.timezone.utc)
+                logger.info(
+                    f"\ncurrent_time: {current_time} tzinfo: {current_time.tzinfo}\n"
+                    f"last_profit_time: {last_profit_time} tzinfo: {last_profit_time.tzinfo}\n"
+                )
+                time_diff = current_time - last_profit_time
+
+                if time_diff.total_seconds() < 86400:  # 24 hours
+                    logger.info(f"24 hours haven't passed since last profit for investment {investment_id}")
+                    continue
+
+                daily_profit = investment_service.calculate_daily_amount(investment_id)["daily_amount"]
+                if daily_profit:
+                    wallet = self.db.query(self.model).filter_by(user_id=user_id).first()
+                    if not wallet:
+                        logger.warning(f"No wallet found for user {user_id}")
+                        wallet = self._create_wallet()
+
+                    wallet.balance += daily_profit
+
+                    transaction = Transaction(
+                        user_id=user_id,
+                        wallet_id=wallet.id,
+                        plan_id=investment_record.plan_id,
+                        transaction_type="daily profit",
+                        token="USD",
+                        previous_balance=wallet.balance - daily_profit,
+                        present_balance=wallet.balance,
+                        status=TransactionStatus.success,
+                    )
+                    self.db.add(transaction)
+
+                    investment_record.profit_added = daily_profit
+                    investment_record.last_viewed = current_time
+                    investment_record.wallet_id = wallet.id
+                    investment_record.date_profit_added = current_time
+                    self.db.add(investment_record)
+
+                    updated = True
+                    logger.info(f"Added daily profit {daily_profit} to wallet for investment {investment_id}")
+
+            if updated:
+                self.db.commit()
+                logger.info("Successfully added daily profits for eligible investments")
+                return True
+            else:
+                logger.info("No eligible investments for daily profit update")
+                return False
+
         except SQLAlchemyError as e:
             logger.error(f"Database error while funding wallet: {str(e)}")
             self.db.rollback()
             raise ServerError("Error processing daily profit")
 
-
     def check_balance(self):
         user_id = self.auth.get_current_user().id
         logger.info(f"Checking wallet balance for user {user_id}")
+        # Update wallet with daily profit before checking balance
+        # investments = self.db.query(Investments).filter_by(user_id=user_id, is_active=True).all()
+        try:
+            self.fund_wallet_with_daily_profit(user_id)
+        except ValueError as e:
+            logger.warning(f"Could not fund wallet for user {user_id}: {str(e)}")
         wallet = self.db.query(self.model).filter_by(user_id=user_id).first()
         if not wallet:
             logger.info(f"No wallet found for user {user_id}, creating new wallet")
             check_wallet = self._create_wallet()
             logger.info(f"Returning balance {check_wallet.balance} for newly created wallet")
-            return check_wallet.balance
+            return {"balance": check_wallet.balance}
         logger.info(f"Returning balance {wallet.balance} for existing wallet")
-        return wallet.balance
+        return {"balance": wallet.balance}
 
 
 

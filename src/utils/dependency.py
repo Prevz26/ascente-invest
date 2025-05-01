@@ -5,7 +5,7 @@ from flask_jwt_extended import JWTManager
 from flask_mail import Mail
 from itsdangerous import URLSafeTimedSerializer
 from .config import get_env_value
-
+from flask_migrate import Migrate
 
 
 SECRET_KEY = get_env_value("SECRET_KEY")
@@ -15,6 +15,7 @@ db = SQLAlchemy()
 bcrypt = Bcrypt()
 jwt = JWTManager()
 mail = Mail()
+migrate = Migrate()
 # celery = Celery() 
 
 

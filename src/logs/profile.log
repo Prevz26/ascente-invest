@@ -1,10 +1,11 @@
-2025-04-25 14:06:20,049 - v1.profiles.routes - INFO - Received plan purchase request with data: {'amount': 1000, 'plan_id': 1, 'token': 'btc'}
-2025-04-25 14:08:27,900 - v1.profiles.routes - INFO - Received plan purchase request with data: {'token': 'btc', 'amount': 1000.0}
-2025-04-25 22:05:57,626 - v1.profiles.routes - INFO - Received plan purchase request with data: {'token': 'btc', 'amount': 1000.0, 'plan_id': 1}
-2025-04-25 22:11:27,576 - v1.profiles.routes - INFO - Received plan purchase request with data: {'token': 'btc', 'amount': 1000.0, 'plan_id': 1}
-2025-04-25 22:13:23,981 - v1.profiles.routes - INFO - Received plan purchase request with data: {'token': 'btc', 'amount': 1000.0, 'plan_id': 1}
-2025-04-25 22:22:20,224 - v1.profiles.routes - INFO - Received plan purchase request with data: {'token': 'btc', 'amount': 1000.0, 'plan_id': 1}
-2025-04-25 22:56:31,628 - v1.profiles.routes - INFO - Received plan purchase request with data: {'token': 'btc', 'amount': 1000.0, 'plan_id': 1}
-2025-04-25 22:56:39,646 - v1.profiles.routes - ERROR - Server error: An error occurred while processing the purchase
-2025-04-25 23:03:40,976 - v1.profiles.routes - INFO - Received plan purchase request with data: {'token': 'btc', 'amount': 1000.0, 'plan_id': 1}
-2025-04-25 23:04:36,917 - v1.profiles.routes - INFO - Received plan purchase request with data: {'token': 'btc', 'amount': 1000.0, 'plan_id': 1}
+2025-04-27 22:52:46,564 - v1.profiles.routes - ERROR - Server error: Invalid callback data format
+2025-04-27 22:55:29,959 - v1.profiles.routes - ERROR - Server error: Error processing callback
+2025-04-27 23:01:29,309 - v1.profiles.routes - INFO - Webhook processedfor transaction_id: 20250426215452-a80bd9bc
+2025-04-27 23:01:29,309 - v1.profiles.routes - INFO - Webhook data: {'uuid': '12345678-1234-5678-1234-567812345678', 'address_in': '0x1234567890abcdef1234567890abcdef12345678', 'address_out': '0xabcdef1234567890abcdef1234567890abcdef12', 'txid_in': '0x9876543210fedcba9876543210fedcba98765432', 'txid_out': '0xfedcba9876543210fedcba9876543210fedcba98', 'confirmations': 12, 'value_coin': 1.23456789, 'value_coin_convert': {'USD': 123.45, 'EUR': 103.45}, 'value_forwarded_coin': 1.2, 'value_forwarded_coin_convert': {'USD': 120.0, 'EUR': 100.8}, 'fee_coin': 0.03456789, 'coin': 'eth', 'price': 1850.5, 'pending': 0}
+2025-04-29 11:10:23,662 - v1.profiles.routes - INFO - Received plan purchase request with data: {'token': 'btc', 'amount': 3000.0, 'plan_id': 1}
+2025-04-29 11:15:17,589 - v1.profiles.routes - ERROR - Server error: Error processing callback
+2025-04-29 11:16:11,889 - v1.profiles.routes - INFO - Webhook processedfor transaction_id: 20250429111024-b5a21493
+2025-04-29 11:16:11,889 - v1.profiles.routes - INFO - Webhook data: {'uuid': '12345678-1234-5678-1234-567812345678', 'address_in': '0x1234567890abcdef1234567890abcdef12345678', 'address_out': '0xabcdef1234567890abcdef1234567890abcdef12', 'txid_in': '0x9876543210fedcba9876543210fedcba98765432', 'txid_out': '0xfedcba9876543210fedcba9876543210fedcba98', 'confirmations': 12, 'value_coin': 1.23456789, 'value_coin_convert': {'USD': 123.45, 'EUR': 103.45}, 'value_forwarded_coin': 1.2, 'value_forwarded_coin_convert': {'USD': 120.0, 'EUR': 100.8}, 'fee_coin': 0.03456789, 'coin': 'eth', 'price': 1850.5, 'pending': 0}
+2025-04-30 18:39:00,763 - v1.profiles.routes - INFO - Received plan purchase request with data: {'token': 'btc', 'amount': 3000.0, 'plan_id': 1}
+2025-04-30 18:45:01,680 - v1.profiles.routes - INFO - Webhook processedfor transaction_id: 20250430183901-4950911a
+2025-04-30 18:45:01,681 - v1.profiles.routes - INFO - Webhook data: {'uuid': '12345678-1234-5678-1234-567812345678', 'address_in': '0x1234567890abcdef1234567890abcdef12345678', 'address_out': '0xabcdef1234567890abcdef1234567890abcdef12', 'txid_in': '0x9876543210fedcba9876543210fedcba98765432', 'txid_out': '0xfedcba9876543210fedcba9876543210fedcba98', 'confirmations': 12, 'value_coin': 1.23456789, 'value_coin_convert': {'USD': 123.45, 'EUR': 103.45}, 'value_forwarded_coin': 1.2, 'value_forwarded_coin_convert': {'USD': 120.0, 'EUR': 100.8}, 'fee_coin': 0.03456789, 'coin': 'eth', 'price': 1850.5, 'pending': 0}

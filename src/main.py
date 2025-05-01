@@ -7,6 +7,7 @@ from v1.profiles.routes import profile_bp
 from utils.exceptions import exception_blueprint
 from flask_cors import CORS
 from v1.admin.routes import admin_bp
+from v1.investments.routes import investment_bp
 
 def create_app():
     app = Flask(__name__)
@@ -14,6 +15,7 @@ def create_app():
 
     #add extenstions 
     dependency.db.init_app(app)
+    dependency.migrate.init_app(app, dependency.db)
     dependency.bcrypt.init_app(app)
     dependency.jwt.init_app(app)
     dependency.mail.init_app(app)
@@ -28,6 +30,7 @@ def create_app():
     app.register_blueprint(auth_bp)
     app.register_blueprint(profile_bp)
     app.register_blueprint(admin_bp)
+    app.register_blueprint(investment_bp)
 
     app.config["CELERY_BROKER_URL"] = "redis://localhost:6379/0"
     app.config["CELERY_RESULT_BACKEND"] = "redis://localhost:6379/0"    
