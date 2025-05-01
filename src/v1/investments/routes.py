@@ -23,11 +23,14 @@ investment_logger.addHandler(file_handler)
 
 class FetchInvestment(Resource):
     @jwt_required()
-
     def get(self, investment_id):
+        investment_logger.info(f"FetchInvestment: Received GET request for investment_id={investment_id}")
         try:
+            investment_logger.info(f"FetchInvestment: Fetching investment with id={investment_id}")
             investment = investment_service.fetch_investment(investment_id)
+            investment_logger.info(f"FetchInvestment: Investment fetched: {investment}")
             validated_data = InvestmentSchema(**investment).model_dump(exclude_none=True, mode="json")
+            investment_logger.info(f"FetchInvestment: Investment validated data: {validated_data}")
             return custom_response.success_response(
                 message="Investment fetched successfully",
                 data=validated_data
@@ -43,9 +46,13 @@ class FetchInvestment(Resource):
 class FetchAllInvestments(Resource):
     @jwt_required()
     def get(self):
+        investment_logger.info("FetchAllInvestments: Received GET request for all investments")
         try:
+            investment_logger.info("FetchAllInvestments: Fetching all investments")
             investments = investment_service.fetch_all_investments()
+            investment_logger.info(f"FetchAllInvestments: Investments fetched: {investments}")
             validated_data = AllInvestmentSchema(data = investments).model_dump(mode="json")
+            investment_logger.info(f"FetchAllInvestments: Validated data: {validated_data}")
             investment_logger.info(investments)
             return custom_response.success_response(
                 message="All investments fetched successfully",
@@ -59,8 +66,11 @@ class FetchAllInvestments(Resource):
 class CalculateReturns(Resource):
     @jwt_required()
     def get(self, investment_id):
+        investment_logger.info(f"CalculateReturns: Received GET request for investment_id={investment_id}")
         try:
+            investment_logger.info(f"CalculateReturns: Calculating returns for investment_id={investment_id}")
             returns = investment_service.calculate_returns(investment_id)
+            investment_logger.info(f"CalculateReturns: Returns calculated: {returns}")
             return custom_response.success_response(
                 message="Returns calculated successfully",
                 data=returns
@@ -73,8 +83,11 @@ class CalculateReturns(Resource):
 class CheckMaturity(Resource):
     @jwt_required()
     def get(self, investment_id):
+        investment_logger.info(f"CheckMaturity: Received GET request for investment_id={investment_id}")
         try:
+            investment_logger.info(f"CheckMaturity: Checking maturity for investment_id={investment_id}")
             maturity = investment_service.check_maturity(investment_id)
+            investment_logger.info(f"CheckMaturity: Maturity status: {maturity}")
             return custom_response.success_response(
                 message="Maturity status fetched successfully",
                 data=maturity
@@ -87,8 +100,11 @@ class CheckMaturity(Resource):
 class CalculateDailyAmount(Resource):
     @jwt_required()
     def get(self, investment_id):
+        investment_logger.info(f"CalculateDailyAmount: Received GET request for investment_id={investment_id}")
         try:
+            investment_logger.info(f"CalculateDailyAmount: Calculating daily amount for investment_id={investment_id}")
             daily_amount = investment_service.calculate_daily_amount(investment_id)
+            investment_logger.info(f"CalculateDailyAmount: Daily amount calculated: {daily_amount}")
             return custom_response.success_response(
                 message="Daily amount calculated successfully",
                 data=daily_amount
@@ -103,9 +119,13 @@ class CalculateDailyAmount(Resource):
 class InvestmentProfit(Resource):
     @jwt_required()
     def get(self, investment_id):
+        investment_logger.info(f"InvestmentProfit: Received GET request for investment_id={investment_id}")
         try:
+            investment_logger.info(f"InvestmentProfit: Getting all profits for investment_id={investment_id}")
             profit = investment_service.get_all_profits(investment_id)
+            investment_logger.info(f"InvestmentProfit: Profit data: {profit}")
             validated_data = InvestmentProfit(**profit).model_dump(exclude_none=True, mode="json")
+            investment_logger.info(f"InvestmentProfit: Validated profit data: {validated_data}")
             return custom_response.success_response(
                 message="Investment profit calculated successfully",
                 data=validated_data

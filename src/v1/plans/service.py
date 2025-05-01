@@ -28,6 +28,7 @@ logger.addHandler(file_handler)
 
 class CryptApi():
     def __init__(self, ticker:str):
+        logger.info(f"Initializing CryptApi with ticker: {ticker}")
         self.ticker = ticker
         self.url = f"https://api.cryptapi.io/{self.ticker}/create/"
 
@@ -36,7 +37,9 @@ class CryptApi():
         logger.debug(f"Address parameters: {kwargs}")
         address_params = RequestCryptApiSchema(**kwargs).model_dump(by_alias=True)
         try:
+            logger.info(f"Sending request to CryptAPI for address creation: {self.url} with params {address_params}")
             response = requests.get(self.url, params=address_params)
+            logger.info(f"Received response from CryptAPI for address creation: {response.status_code}")
             logger.info(f"Successfully created address for {self.ticker}")
             validated_response = ResponseCryptApiSchema(**response.json()).model_dump()
             logger.debug(f"Response data: {validated_response}")
@@ -51,7 +54,9 @@ class CryptApi():
         url = self.url.replace('create', 'logs')
         validated_callback = CallBack(callback=callback).model_dump()
         try:
+            logger.info(f"Sending request to CryptAPI for logs: {url} with params {validated_callback}")
             response = requests.get(url, params=validated_callback)
+            logger.info(f"Received response from CryptAPI for logs: {response.status_code}")
             logger.info(f"Successfully retrieved logs for {self.ticker}")
             validated_response = LogResponseSchema(**response.json()).model_dump()
             logger.debug(f"Log response data: {validated_response}")
@@ -68,7 +73,9 @@ class CryptApi():
             "from": from_currency,
         }
         try:
+            logger.info(f"Sending request to CryptAPI for conversion: {url} with params {query}")
             response = requests.get(url, params=query)
+            logger.info(f"Received response from CryptAPI for conversion: {response.status_code}")
             response.raise_for_status()  # Raises HTTPError for bad responses
             logger.info(f"Successfully converted {value} {from_currency} to {ticker}")
             return response.json()
@@ -78,6 +85,7 @@ class CryptApi():
 
 class UserPlanService:
     def __init__(self):
+        logger.info("Initializing UserPlanService")
         self.db = db.session
         self.model = Plan
         self.user = auth_service
@@ -97,14 +105,18 @@ class UserPlanService:
         }
     
     def _generate_transaction_id(self):
+        logger.info("Generating new transaction ID")
         current_time = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
         unique_id = str(uuid.uuid4().hex)[:8]
-        return f"{current_time}-{unique_id}"
+        transaction_id = f"{current_time}-{unique_id}"
+        logger.debug(f"Generated transaction ID: {transaction_id}")
+        return transaction_id
     
     def get_all_plans(self):
         logger.info("Fetching all plans")
         try:
             plans = self.db.query(self.model).all()
+            logger.info(f"Fetched {len(plans)} plans from database")
             return [plan.to_dict() for plan in plans]
         except SQLAlchemyError as e:
             logger.error(f"Error fetching plans: {str(e)}")
@@ -116,6 +128,7 @@ class UserPlanService:
         if not plan:
             logger.warning(f"Plan with id {plan_id} not found")
             raise NotFoundError("Plan not found")
+        logger.info(f"Plan with id {plan_id} found")
         return plan.to_dict()
 
     def handle_callback(self, transaction_id, **data):
@@ -126,6 +139,7 @@ class UserPlanService:
                 logger.error("No transaction ID provided")
                 raise NotFoundError("Transaction ID is required")
 
+            logger.info(f"Looking up transaction with ID: {transaction_id}")
             # Find associated transaction
             transaction = self.db.query(Transaction).filter(
                 and_(
@@ -143,12 +157,14 @@ class UserPlanService:
                 logger.error("No callback data provided")
                 raise ServerError("Invalid callback data")
 
+            logger.info(f"Updating transaction {transaction_id} with callback data")
             # Prepare base transaction updates
             transaction.blockchain_in = data.get('address_in')
             transaction.crytp_api_uuid = data.get('uuid')
 
             # Handle failed status first
             if data.get('status') == 'failed':
+                logger.info(f"Callback status is failed for transaction {transaction_id}")
                 transaction.status = 'failed'
                 self.db.add(transaction)
                 self.db.commit()
@@ -157,6 +173,7 @@ class UserPlanService:
 
             # Validate callback data format
             try:
+                logger.info(f"Validating callback data format for transaction {transaction_id}")
                 if data.get('confirmations', 0) == 1:
                     validated_data = SuccessCallback(**data).model_dump()
                 elif data.get('confirmations', 0) == 0:
@@ -170,8 +187,10 @@ class UserPlanService:
             # Determine status and prepare investment if needed
             investment = None
             if validated_data.get('confirmations', 0) == 0:
+                logger.info(f"Transaction {transaction_id} is still pending")
                 transaction.status = TransactionStatus.pending
             else:
+                logger.info(f"Transaction {transaction_id} is successful, creating investment")
                 transaction.status = TransactionStatus.success
                 transaction.amount = validated_data.get('value_forwarded_coin_convert')["USD"]
                 transaction.blockchain_out = validated_data.get('address_out')
@@ -185,6 +204,7 @@ class UserPlanService:
                 )
 
             # Perform all database updates
+            logger.info(f"Committing transaction {transaction_id} and investment (if any)")
             self.db.add(transaction)
             if investment:
                 self.db.add(investment)
@@ -204,13 +224,13 @@ class UserPlanService:
         logger.info(f"Checking payment status for user {user_id}, transaction {transaction_id}")
     
         try:
+            logger.info(f"Querying transaction {transaction_id} for user {user_id}")
             transaction = self.db.query(Transaction).filter_by(transaction_id=transaction_id, user_id=user_id).first()
             if not transaction:
                 logger.error(f"Transaction {transaction_id} not found")
                 raise NotFoundError("Transaction not found")
-            # logger.info(f"Transaction status: {transaction.status}")
             transaction_data = transaction.to_dict()
-            # logger.info(f"Transaction data: {transaction_data}")
+            logger.info(f"Transaction data for {transaction_id}: {transaction_data}")
             data =  {
                 "status": transaction_data.get("status"),
                 "transaction_id": transaction_data.get("transaction_id"),
@@ -235,6 +255,7 @@ class UserPlanService:
         
         try:
             # Get plan details
+            logger.info(f"Fetching plan {plan_id} from database")
             plan = self.db.query(Plan).filter_by(id=plan_id).first()
             if not plan:
                 logger.error(f"Plan {plan_id} not found")
@@ -251,7 +272,7 @@ class UserPlanService:
                 raise ServerError(f"Amount cannot exceed {plan.maximum}")
 
             # Initialize crypto payment
-            logger.debug(f"Initializing crypto payment with token: {token}")
+            logger.info(f"Initializing CryptApi for token: {token}")
             crypt = CryptApi(ticker=token)
             address = f"0.3@{self.me_address[token]}|0.7@{self.address[token]}"
             logger.debug(f"Split payment address configured: {address}")
@@ -273,15 +294,16 @@ class UserPlanService:
                 "json": 1
             }
             
+            logger.info(f"Converting USD amount {amount} to {token}")
             convert = crypt.convert(ticker=token, value=amount, from_currency="USD")
-            logger.info(f"conversion: {convert}")
+            logger.info(f"Conversion result: {convert}")
             logger.debug(f"Requesting payment address with params: {info}")
             data = crypt.create_address(**info)
             payment_address = data["address_in"]
             logger.info(f"Payment address generated: {payment_address}")
             
             # Create transaction record
-            logger.debug("Creating transaction record")
+            logger.info(f"Creating transaction record for user {user_id}, plan {plan_id}")
             transaction = Transaction(
                 user_id=user_id,
                 token=token,
@@ -374,6 +396,7 @@ class UserPlanService:
 
 class WalletService:
     def __init__(self):
+        logger.info("Initializing WalletService")
         self.db = db.session
         self.model = Wallet
         self.auth = auth_service
@@ -387,6 +410,7 @@ class WalletService:
             return existing_wallet
 
         try:
+            logger.info(f"Creating new wallet for user {user_id} with balance {balance}")
             wallet = self.model(user_id=user_id, balance=balance)
             self.db.add(wallet)
             self.db.commit()
@@ -399,11 +423,11 @@ class WalletService:
 
 
     def fund_wallet_with_daily_profit(self, user_id):
-        # user_id = self.auth.get_current_user().id   
         logger.info(f"Processing daily profit for all active investments for user {user_id}")
         try:
             # Fetch all active investments for the user
-            investments = investment_service.fetch_all_investments()
+            logger.info(f"Fetching all active investments for user {user_id}")
+            investments = investment_service.fetch_all_investments(user_id)
             if not investments:
                 logger.info(f"No active investments found for user {user_id}")
                 return False
@@ -415,6 +439,7 @@ class WalletService:
                     continue
 
                 investment_id = investment.get('id')
+                logger.info(f"Processing investment {investment_id} for daily profit")
                 investment_record = self.db.query(Investments).filter_by(id=investment_id, user_id=user_id).first()
                 if not investment_record:
                     logger.warning(f"Investment record {investment_id} not found in DB")
@@ -430,12 +455,14 @@ class WalletService:
                 )
                 time_diff = current_time - last_profit_time
 
-                if time_diff.total_seconds() < 86400:  # 24 hours
+                if time_diff.total_seconds() < 30:  # 24 hours
                     logger.info(f"24 hours haven't passed since last profit for investment {investment_id}")
                     continue
 
+                logger.info(f"Calculating daily profit for investment {investment_id}")
                 daily_profit = investment_service.calculate_daily_amount(investment_id)["daily_amount"]
                 if daily_profit:
+                    logger.info(f"Adding daily profit {daily_profit} to wallet for user {user_id}")
                     wallet = self.db.query(self.model).filter_by(user_id=user_id).first()
                     if not wallet:
                         logger.warning(f"No wallet found for user {user_id}")
@@ -443,6 +470,7 @@ class WalletService:
 
                     wallet.balance += daily_profit
 
+                    logger.info(f"Creating transaction for daily profit for investment {investment_id}")
                     transaction = Transaction(
                         user_id=user_id,
                         wallet_id=wallet.id,
@@ -465,6 +493,7 @@ class WalletService:
                     logger.info(f"Added daily profit {daily_profit} to wallet for investment {investment_id}")
 
             if updated:
+                logger.info("Committing daily profit updates to database")
                 self.db.commit()
                 logger.info("Successfully added daily profits for eligible investments")
                 return True
@@ -480,9 +509,8 @@ class WalletService:
     def check_balance(self):
         user_id = self.auth.get_current_user().id
         logger.info(f"Checking wallet balance for user {user_id}")
-        # Update wallet with daily profit before checking balance
-        # investments = self.db.query(Investments).filter_by(user_id=user_id, is_active=True).all()
         try:
+            logger.info(f"Funding wallet with daily profit before checking balance for user {user_id}")
             self.fund_wallet_with_daily_profit(user_id)
         except ValueError as e:
             logger.warning(f"Could not fund wallet for user {user_id}: {str(e)}")
@@ -491,9 +519,9 @@ class WalletService:
             logger.info(f"No wallet found for user {user_id}, creating new wallet")
             check_wallet = self._create_wallet()
             logger.info(f"Returning balance {check_wallet.balance} for newly created wallet")
-            return {"balance": check_wallet.balance}
+            return check_wallet.balance
         logger.info(f"Returning balance {wallet.balance} for existing wallet")
-        return {"balance": wallet.balance}
+        return wallet.balance
 
 
 

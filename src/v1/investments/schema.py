@@ -26,7 +26,8 @@ class InvestmentSchema(BaseModel):
     status: str
     invested_date: datetime | None = None
     last_viewed: datetime | None = None
-    profit_added: datetime | None = None
+    date_profit_added: datetime | None = None
+    profit_added: float | None = 0
     user_id: int
     wallet_id: int | None = None
     plan_id: int
