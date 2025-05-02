@@ -45,16 +45,8 @@ components:
         confirm_password:
           type: string
           format: password
-        is_admin:
-          type: boolean
-          default: false
         country:
           type: string
-          enum:
-            - united states
-            - canada
-            - united kingdom
-            # ... [other countries]
 
     LoginRequest:
       type: object
@@ -66,27 +58,40 @@ components:
           type: string
         password:
           type: string
+          format: password
 
-    # Plan Schemas
-    Plan:
+    # Profile Schemas
+    Profile:
       type: object
       properties:
         id:
           type: integer
-        name:
-          type: string
-        duration:
-          type: string
-        rate_of_return:
-          type: number
-          format: float
-        status:
-          type: string
-        minimum:
+        user_id:
           type: integer
-        maximum:
-          type: integer
-        amount_to_receive:
+        first_name:
+          type: string
+        last_name:
+          type: string
+        date_of_birth:
+          type: string
+          format: date
+        address:
+          type: string
+        avatar_url:
+          type: string
+          format: uri
+
+    ProfileUpdate:
+      type: object
+      properties:
+        first_name:
+          type: string
+        last_name:
+          type: string
+        date_of_birth:
+          type: string
+          format: date
+        address:
           type: string
 
     # Wallet Schemas
@@ -95,11 +100,25 @@ components:
       properties:
         id:
           type: integer
-        balance:
-          type: number
-          format: float
         user_id:
           type: integer
+        balance:
+          type: number
+        token:
+          type: string
+          enum: [btc, eth, trc20/usdt, trx]
+
+    WalletFundRequest:
+      type: object
+      required:
+        - amount
+        - token
+      properties:
+        amount:
+          type: number
+        token:
+          type: string
+          enum: [btc, eth, trc20/usdt, trx]
 
     # Transaction Schemas
     Transaction:
@@ -107,8 +126,13 @@ components:
       properties:
         id:
           type: integer
+        wallet_id:
+          type: integer
+        user_id:
+          type: integer
         token:
           type: string
+          enum: [btc, eth, trc20/usdt, trx]
         previous_balance:
           type: number
         present_balance:
@@ -120,6 +144,114 @@ components:
           type: string
         blockchain_out:
           type: string
+        created_at:
+          type: string
+          format: date-time
+
+    # Investment Schemas
+    Investment:
+      type: object
+      properties:
+        id:
+          type: integer
+        user_id:
+          type: integer
+        wallet_id:
+          type: integer
+        plan_id:
+          type: integer
+        amount:
+          type: number
+        status:
+          type: string
+          enum: [pending, active, matured, closed]
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    InvestmentCreate:
+      type: object
+      required:
+        - wallet_id
+        - plan_id
+        - amount
+      properties:
+        wallet_id:
+          type: integer
+        plan_id:
+          type: integer
+        amount:
+          type: number
+
+    InvestmentMaturity:
+      type: object
+      properties:
+        matured:
+          type: boolean
+        maturity_date:
+          type: string
+          format: date-time
+
+    # Plan Schemas
+    Plan:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        duration:
+          type: integer
+          description: Duration in days
+        rate:
+          type: number
+        token_type:
+          type: string
+          enum: [btc, eth, trc20/usdt, trx]
+
+    # Error Schema
+    Error:
+      type: object
+      properties:
+        message:
+          type: string
+        status_code:
+          type: integer
+
+  responses:
+    UnauthorizedError:
+      description: JWT is missing or invalid
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    NotFoundError:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    ValidationError:
+      description: Validation error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    IntegrityError:
+      description: Integrity error (duplicate or constraint violation)
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    InternalServerError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
 
 paths:
   # Authentication Endpoints
@@ -140,7 +272,7 @@ paths:
         '409':
           description: User already exists
         '422':
-          description: Validation error
+          $ref: '#/components/responses/ValidationError'
 
   /investment/login:
     post:
@@ -157,7 +289,7 @@ paths:
         '200':
           description: Successfully logged in
         '401':
-          description: Invalid credentials
+          $ref: '#/components/responses/UnauthorizedError'
 
   # Profile Endpoints
   /investment/profile:
@@ -170,8 +302,12 @@ paths:
       responses:
         '200':
           description: Profile retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Profile'
         '404':
-          description: Profile not found
+          $ref: '#/components/responses/NotFoundError'
 
     patch:
       tags:
@@ -179,11 +315,40 @@ paths:
       summary: Update user profile
       security:
         - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProfileUpdate'
       responses:
         '200':
           description: Profile updated successfully
         '400':
-          description: Invalid request
+          $ref: '#/components/responses/ValidationError'
+
+  /investment/profile/avatar:
+    post:
+      tags:
+        - Profile
+      summary: Upload or update profile avatar
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                avatar:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: Avatar uploaded successfully
+        '400':
+          $ref: '#/components/responses/ValidationError'
 
   # Wallet Endpoints
   /investment/wallet:
@@ -196,8 +361,12 @@ paths:
       responses:
         '200':
           description: Wallet balance retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Wallet'
         '404':
-          description: Wallet not found
+          $ref: '#/components/responses/NotFoundError'
 
   /investment/wallet/fund:
     post:
@@ -211,17 +380,188 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                amount:
-                  type: number
-                token:
-                  type: string
+              $ref: '#/components/schemas/WalletFundRequest'
       responses:
         '200':
           description: Wallet funding initiated
         '400':
-          description: Invalid request
+          $ref: '#/components/responses/ValidationError'
+
+  # Transaction Endpoints
+  /investment/transactions:
+    get:
+      tags:
+        - Transaction
+      summary: Get all transactions for the authenticated user
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: List of transactions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Transaction'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  /investment/transactions/{transaction_id}:
+    get:
+      tags:
+        - Transaction
+      summary: Get transaction by ID
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: transaction_id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Transaction details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Transaction'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  # Investment Endpoints
+  /investment/investments:
+    get:
+      tags:
+        - Investment
+      summary: Get all investments for the authenticated user
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: List of investments
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Investment'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+    post:
+      tags:
+        - Investment
+      summary: Create a new investment
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InvestmentCreate'
+      responses:
+        '201':
+          description: Investment created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Investment'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  /investment/investments/{investment_id}:
+    get:
+      tags:
+        - Investment
+      summary: Get investment by ID
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: investment_id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Investment details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Investment'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  /investment/investments/{investment_id}/maturity:
+    get:
+      tags:
+        - Investment
+      summary: Check investment maturity
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: investment_id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Maturity status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvestmentMaturity'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  # Plan Endpoints
+  /investment/plans:
+    get:
+      tags:
+        - Plan
+      summary: Get all investment plans
+      responses:
+        '200':
+          description: List of plans
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Plan'
+
+  /investment/plan/{id}:
+    get:
+      tags:
+        - Plan
+      summary: Get plan by ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Plan retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Plan'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
 
   # Admin Endpoints
   /investment/admin/plan:
@@ -241,7 +581,7 @@ paths:
         '201':
           description: Plan created successfully
         '409':
-          description: Plan already exists
+          $ref: '#/components/responses/IntegrityError'
 
   /investment/admin/plans:
     get:
@@ -253,6 +593,12 @@ paths:
       responses:
         '200':
           description: Plans retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Plan'
 
   /investment/admin/plan/{id}:
     parameters:
@@ -270,8 +616,12 @@ paths:
       responses:
         '200':
           description: Plan retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Plan'
         '404':
-          description: Plan not found
+          $ref: '#/components/responses/NotFoundError'
 
     patch:
       tags:
@@ -279,11 +629,21 @@ paths:
       summary: Update plan
       security:
         - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Plan'
       responses:
         '200':
           description: Plan updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Plan'
         '404':
-          description: Plan not found
+          $ref: '#/components/responses/NotFoundError'
 
     delete:
       tags:
@@ -295,7 +655,7 @@ paths:
         '200':
           description: Plan deleted successfully
         '404':
-          description: Plan not found
+          $ref: '#/components/responses/NotFoundError'
 
 tags:
   - name: Authentication
@@ -304,5 +664,11 @@ tags:
     description: User profile operations
   - name: Wallet
     description: Wallet management operations
+  - name: Transaction
+    description: Transaction operations
+  - name: Investment
+    description: Investment operations
+  - name: Plan
+    description: Investment plan operations
   - name: Admin
-    description: Administrative operations
+    description: Admin-only operations
