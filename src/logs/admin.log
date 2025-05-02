@@ -27,3 +27,7 @@
 2025-04-30 18:37:57,562 - v1.admin.routes - INFO - Creating new plan with data: {'name': 'Investment Plan A', 'duration': '3 weeks', 'rate_of_return': 20.0, 'status': 'active', 'minimum': 2000, 'maximum': 100000}
 2025-04-30 18:37:57,563 - v1.admin.service - INFO - Creating new plan with details: {'name': 'Investment Plan A', 'duration': '3 weeks', 'rate_of_return': 20.0, 'status': 'active', 'minimum': 2000, 'maximum': 100000}
 2025-04-30 18:38:01,302 - v1.admin.service - INFO - Successfully created plan: Investment Plan A
+2025-05-01 22:32:53,462 - v1.admin.routes - INFO - {'name': 'Investment Plan B', 'duration': '1 week', 'rate_of_return': 30, 'status': 'active', 'minimum': 2000, 'maximum': 100000}
+2025-05-01 22:32:53,463 - v1.admin.routes - INFO - Creating new plan with data: {'name': 'Investment Plan B', 'duration': '1 week', 'rate_of_return': 30.0, 'status': 'active', 'minimum': 2000, 'maximum': 100000}
+2025-05-01 22:32:53,463 - v1.admin.service - INFO - Creating new plan with details: {'name': 'Investment Plan B', 'duration': '1 week', 'rate_of_return': 30.0, 'status': 'active', 'minimum': 2000, 'maximum': 100000}
+2025-05-01 22:32:54,687 - v1.admin.service - INFO - Successfully created plan: Investment Plan B

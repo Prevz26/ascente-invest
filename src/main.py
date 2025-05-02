@@ -8,6 +8,8 @@ from utils.exceptions import exception_blueprint
 from flask_cors import CORS
 from v1.admin.routes import admin_bp
 from v1.investments.routes import investment_bp
+from schedule import scheduler
+
 
 def create_app():
     app = Flask(__name__)

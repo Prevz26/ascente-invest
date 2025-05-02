@@ -14,6 +14,7 @@ class Investments(BaseModel):
     last_viewed = Column(DateTime, nullable=True)
     profit_added = Column(Numeric(10,2), nullable=True)
     date_profit_added = Column(DateTime, nullable=True)
+    date_next_profit = Column(DateTime, nullable=True)
     user_id = Column(Integer, ForeignKey('users.id'))
     user = relationship('User', backref='investments')
 
@@ -84,6 +85,7 @@ class Investments(BaseModel):
             'total_payout': self.total_payout,
             'maturity_date': maturity["maturity date"] if maturity else None,
             'maturity_date_obj': maturity["date"].isoformat() if maturity else None,
+            'date_next_profit': self.date_next_profit.isoformat() if self.date_next_profit else None,
             'is_matured': self.is_matured,
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'plan': {

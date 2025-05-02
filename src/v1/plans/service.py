@@ -455,6 +455,15 @@ class WalletService:
                 )
                 time_diff = current_time - last_profit_time
 
+                # Check using next_profit_time if available
+                next_profit_time = investment_record.date_next_profit
+                if next_profit_time:
+                    if next_profit_time.tzinfo is None:
+                        next_profit_time = next_profit_time.replace(tzinfo=datetime.timezone.utc)
+                    if current_time < next_profit_time:
+                        logger.info(f"Current time has not reached next_profit_time for investment {investment_id}")
+                        continue
+
                 if time_diff.total_seconds() < 30:  # 24 hours
                     logger.info(f"24 hours haven't passed since last profit for investment {investment_id}")
                     continue
@@ -482,7 +491,7 @@ class WalletService:
                         status=TransactionStatus.success,
                     )
                     self.db.add(transaction)
-
+                    investment_record.date_next_profit = current_time + datetime.timedelta(hours=24)
                     investment_record.profit_added = daily_profit
                     investment_record.last_viewed = current_time
                     investment_record.wallet_id = wallet.id
@@ -527,3 +536,4 @@ class WalletService:
 
 wallet_service = WalletService()
 user_plan_service = UserPlanService()
+

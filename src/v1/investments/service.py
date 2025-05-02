@@ -5,6 +5,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from utils.dependency import db
 from utils.exceptions import NotFoundError, ServerError
 from utils.log import get_log_path
+from v1.plans.models import Wallet
 from .models import Investments
 from v1.auth.service import auth_service
 import sqlalchemy as sa 
@@ -169,28 +170,57 @@ class InvestmentService:
             raise ServerError("An error occurred while calculating daily amount")
         
 
-    def withdraw(self, investment_id, amount):
-        """Withdraw funds from an investment if matured and sufficient balance."""
-        logger.info(f"Attempting withdrawal from investment {investment_id} for amount {amount}")
+    def withdraw(self, amount):
+        """
+        Withdraw funds from matured investments with sufficient payout.
+        Withdraws from investments in order until the requested amount is fulfilled or funds run out.
+        """
+        logger.info(f"Attempting withdrawal for amount {amount}")
         user_id = self.auth.get_current_user().id
-        investment = self.db.query(self.model).filter_by(id=investment_id, user_id=user_id).first()
-        if not investment:
-            logger.warning(f"Investment with ID {investment_id} not found")
-            raise NotFoundError("Investment not found")
-        if not investment.is_matured:
-            logger.warning(f"Investment {investment_id} has not matured")
-            raise ServerError("Investment has not matured yet")
-        if amount > investment.total_payout:
-            logger.warning(f"Insufficient funds in investment {investment_id} for withdrawal")
-            raise ServerError("Insufficient funds for withdrawal")
+        investments = (
+            self.db.query(self.model)
+            .filter_by(user_id=user_id)
+            .order_by(self.model.maturity_date.asc())
+            .all()
+        )
+        if not investments:
+            logger.warning(f"No investments found for user {user_id}")
+            raise NotFoundError("No investments found")
+
+        total_available = sum(inv.total_payout for inv in investments if inv.is_matured)
+        if amount > total_available:
+            logger.warning(f"Insufficient matured funds for withdrawal: requested {amount}, available {total_available}")
+            raise ServerError("Insufficient matured funds for withdrawal")
+
+        remaining = amount
+        withdrawn = 0
         try:
-            logger.debug(f"Subtracting {amount} from investment {investment_id} total_payout")
-            investment.total_payout -= amount
+            for investment in investments:
+                if not investment.is_matured or investment.total_payout <= 0:
+                    continue
+                withdrawable = min(remaining, investment.total_payout)
+                if withdrawable <= 0:
+                    continue
+                wallet = self.db.query(Wallet).filter_by(id=investment.wallet_id).first()
+                if not wallet:
+                    logger.warning(f"Wallet {investment.wallet_id} not found for investment {investment.id}")
+                    continue
+                if wallet.balance < withdrawable:
+                    logger.warning(f"Wallet {wallet.id} has insufficient balance for withdrawal")
+                    continue
+                wallet.balance -= withdrawable
+                investment.total_payout -= withdrawable
+                withdrawn += withdrawable
+                remaining -= withdrawable
+                logger.info(f"Withdrew {withdrawable} from investment {investment.id}, wallet {wallet.id}")
+                if remaining <= 0:
+                    break
             self.db.commit()
-            logger.info(f"Withdrawal of {amount} from investment {investment_id} successful")
+            logger.info(f"Total withdrawn: {withdrawn}")
             return {
-                "withdrawn": amount,
-                "remaining_balance": investment.total_payout
+                "withdrawn": withdrawn,
+                "remaining_requested": remaining,
+                "status": "success" if withdrawn == amount else "partial"
             }
         except SQLAlchemyError as e:
             logger.error(f"Error during withdrawal: {str(e)}")

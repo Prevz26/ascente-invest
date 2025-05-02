@@ -36,6 +36,7 @@ class InvestmentSchema(BaseModel):
     total_payout: float
     maturity_date: str | None = None
     maturity_date_obj: datetime | None = None
+    date_next_profit: datetime | None = None
     is_matured: bool
     created_at: datetime | None = None
     plan: PlanSchema | None = None

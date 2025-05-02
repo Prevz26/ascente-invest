@@ -137,6 +137,23 @@ class InvestmentProfit(Resource):
             investment_logger.error(f"Error calculating investment profit: {str(e)}")
             return custom_response.error_response(message=str(e), status_code=500)
 
+
+class Withdraw(Resource):
+    @jwt_required()
+    @user_only()
+    def post(self):
+        amount = request.json.get("amount")
+        investment_logger.info(f"Withdraw: Received POST request for amount={amount}")
+        try:
+            investment_logger.info(f"Withdraw: Processing withdrawal for investment_id={amount}")
+            withdrawal = investment_service.withdraw(amount)
+            return custom_response.server_error()
+        except NotFoundError as e:
+            investment_logger.error(f"Investment not found: {str(e)}")
+            return custom_response.not_found_error()
+        except ServerError as e:
+            investment_logger.error(f"Error processing withdrawal: {str(e)}")
+            return custom_response.error_response(message=str(e), status_code=500)
 # Add route
 api.add_resource(FetchInvestment, "/<int:investment_id>")
 api.add_resource(FetchAllInvestments, "/all")
@@ -144,3 +161,4 @@ api.add_resource(CalculateReturns, "/<int:investment_id>/returns")
 api.add_resource(CheckMaturity, "/<int:investment_id>/maturity")
 api.add_resource(CalculateDailyAmount, "/<int:investment_id>/daily-amount")
 api.add_resource(InvestmentProfit, "/<int:investment_id>/profit")
+api.add_resource(Withdraw, "/withdraw")

@@ -418,3 +418,63 @@
 2025-05-01 10:55:40,574 - v1.auth.service - INFO - User found: <User precious>
 2025-05-01 11:00:08,820 - v1.auth.service - INFO - c154a5af-7d7c-4c15-89e9-63ac6396e307
 2025-05-01 11:00:36,612 - v1.auth.service - INFO - User found: <User precious>
+2025-05-01 22:27:06,072 - v1.auth.routes - INFO - {'username': 'precious', 'password': 'password123'}
+2025-05-01 22:27:10,180 - v1.auth.service - INFO - User found: <User precious>
+2025-05-01 22:27:10,861 - v1.auth.service - INFO - User authenticated
+2025-05-01 22:27:11,048 - v1.auth.service - INFO - existing user: <User precious>
+2025-05-01 22:28:04,332 - v1.auth.service - INFO - c154a5af-7d7c-4c15-89e9-63ac6396e307
+2025-05-01 22:28:04,684 - v1.auth.service - INFO - User found: <User precious>
+2025-05-01 22:28:20,453 - v1.auth.service - INFO - c154a5af-7d7c-4c15-89e9-63ac6396e307
+2025-05-01 22:28:20,824 - v1.auth.service - INFO - User found: <User precious>
+2025-05-01 22:28:47,461 - v1.auth.service - INFO - c154a5af-7d7c-4c15-89e9-63ac6396e307
+2025-05-01 22:28:47,820 - v1.auth.service - INFO - User found: <User precious>
+2025-05-01 22:28:48,006 - v1.auth.service - INFO - c154a5af-7d7c-4c15-89e9-63ac6396e307
+2025-05-01 22:28:48,170 - v1.auth.service - INFO - User found: <User precious>
+2025-05-01 22:28:58,627 - v1.auth.service - INFO - c154a5af-7d7c-4c15-89e9-63ac6396e307
+2025-05-01 22:28:59,141 - v1.auth.service - INFO - User found: <User precious>
+2025-05-01 22:30:34,951 - v1.auth.service - INFO - c154a5af-7d7c-4c15-89e9-63ac6396e307
+2025-05-01 22:30:35,308 - v1.auth.service - INFO - User found: <User precious>
+2025-05-01 22:32:14,294 - v1.auth.routes - INFO - {'username': 'ojogu', 'password': 'password123'}
+2025-05-01 22:32:14,664 - v1.auth.service - INFO - User found: <User ojogu>
+2025-05-01 22:32:15,315 - v1.auth.service - INFO - User authenticated
+2025-05-01 22:32:15,485 - v1.auth.service - INFO - existing user: <User ojogu>
+2025-05-01 22:32:52,944 - v1.auth.service - INFO - 36f6803f-b503-4506-a25c-46591403fc4f
+2025-05-01 22:32:53,292 - v1.auth.service - INFO - User found: <User ojogu>
+2025-05-01 22:34:09,647 - v1.auth.service - INFO - c154a5af-7d7c-4c15-89e9-63ac6396e307
+2025-05-01 22:34:09,986 - v1.auth.service - INFO - User found: <User precious>
+2025-05-01 22:34:10,167 - v1.auth.service - INFO - c154a5af-7d7c-4c15-89e9-63ac6396e307
+2025-05-01 22:34:10,345 - v1.auth.service - INFO - User found: <User precious>
+2025-05-01 22:35:15,738 - v1.auth.service - INFO - c154a5af-7d7c-4c15-89e9-63ac6396e307
+2025-05-01 22:35:17,236 - v1.auth.service - INFO - User found: <User precious>
+2025-05-01 22:36:52,824 - v1.auth.service - INFO - c154a5af-7d7c-4c15-89e9-63ac6396e307
+2025-05-01 22:36:54,117 - v1.auth.service - INFO - User found: <User precious>
+2025-05-01 22:36:54,280 - v1.auth.service - INFO - c154a5af-7d7c-4c15-89e9-63ac6396e307
+2025-05-01 22:36:55,240 - v1.auth.service - INFO - User found: <User precious>
+2025-05-01 22:37:18,484 - v1.auth.service - INFO - c154a5af-7d7c-4c15-89e9-63ac6396e307
+2025-05-01 22:37:19,778 - v1.auth.service - INFO - User found: <User precious>
+2025-05-02 00:57:44,268 - v1.auth.routes - INFO - {'username': 'precious', 'password': 'password123'}
+2025-05-02 00:57:48,318 - v1.auth.service - INFO - User found: <User precious>
+2025-05-02 00:57:48,742 - v1.auth.service - INFO - User authenticated
+2025-05-02 00:57:48,930 - v1.auth.service - INFO - existing user: <User precious>
+2025-05-02 00:57:53,694 - v1.auth.routes - INFO - {'username': 'precious', 'password': 'password123'}
+2025-05-02 00:57:54,009 - v1.auth.service - INFO - User found: <User precious>
+2025-05-02 00:57:54,425 - v1.auth.service - INFO - User authenticated
+2025-05-02 00:57:54,619 - v1.auth.service - INFO - existing user: <User precious>
+2025-05-02 00:57:57,679 - v1.auth.routes - INFO - {'username': 'precious', 'password': 'password123'}
+2025-05-02 00:57:58,005 - v1.auth.service - INFO - User found: <User precious>
+2025-05-02 00:57:58,424 - v1.auth.service - INFO - User authenticated
+2025-05-02 00:57:58,590 - v1.auth.service - INFO - existing user: <User precious>
+2025-05-02 00:58:01,228 - v1.auth.routes - INFO - {'username': 'precious', 'password': 'password123'}
+2025-05-02 00:58:01,559 - v1.auth.service - INFO - User found: <User precious>
+2025-05-02 00:58:01,964 - v1.auth.service - INFO - User authenticated
+2025-05-02 00:58:02,147 - v1.auth.service - INFO - existing user: <User precious>
+2025-05-02 00:58:29,686 - v1.auth.service - INFO - c154a5af-7d7c-4c15-89e9-63ac6396e307
+2025-05-02 00:58:29,987 - v1.auth.service - INFO - User found: <User precious>
+2025-05-02 00:58:51,695 - v1.auth.service - INFO - c154a5af-7d7c-4c15-89e9-63ac6396e307
+2025-05-02 00:58:52,217 - v1.auth.service - INFO - User found: <User precious>
+2025-05-02 00:58:52,423 - v1.auth.service - INFO - c154a5af-7d7c-4c15-89e9-63ac6396e307
+2025-05-02 00:58:52,637 - v1.auth.service - INFO - User found: <User precious>
+2025-05-02 00:59:04,641 - v1.auth.service - INFO - c154a5af-7d7c-4c15-89e9-63ac6396e307
+2025-05-02 00:59:04,952 - v1.auth.service - INFO - User found: <User precious>
+2025-05-02 00:59:05,119 - v1.auth.service - INFO - c154a5af-7d7c-4c15-89e9-63ac6396e307
+2025-05-02 00:59:05,273 - v1.auth.service - INFO - User found: <User precious>
