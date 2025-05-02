@@ -470,7 +470,7 @@ class WalletService:
                             logger.info(f"Current time has not reached next_profit_time for investment {investment_id} for user {user.id}")
                             continue
 
-                    if time_diff.total_seconds() < 30:  # 24 hours
+                    if time_diff.total_seconds() < 86400:  # 24 hours
                         logger.info(f"24 hours haven't passed since last profit for investment {investment_id} for user {user.id}")
                         continue
 
