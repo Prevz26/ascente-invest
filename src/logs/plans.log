@@ -12,3 +12,7 @@
 2025-05-02 01:55:20,188 - v1.plans.service - INFO - Initializing UserPlanService
 2025-05-02 01:56:09,392 - v1.plans.service - INFO - Initializing WalletService
 2025-05-02 01:56:09,392 - v1.plans.service - INFO - Initializing UserPlanService
+2025-05-02 03:39:40,645 - v1.plans.service - INFO - Initializing WalletService
+2025-05-02 03:39:40,645 - v1.plans.service - INFO - Initializing UserPlanService
+2025-05-02 03:39:41,944 - v1.plans.service - INFO - Initializing WalletService
+2025-05-02 03:39:41,945 - v1.plans.service - INFO - Initializing UserPlanService

@@ -4,6 +4,8 @@ from utils.dependency import db
 from urllib.parse import urlencode
 from utils.exceptions import NotActive, NotFoundError, ServerError
 from sqlalchemy.exc import SQLAlchemyError
+
+from v1.profiles.models import User
 from .models import Plan, Wallet, Transaction
 from .schema import PendingCallback, RequestCryptApiSchema, ResponseCryptApiSchema, LogResponseSchema, CallBack, SuccessCallback
 from v1.auth.service import auth_service
@@ -422,106 +424,112 @@ class WalletService:
             raise ServerError("An error occurred while creating wallet")
 
 
-    def fund_wallet_with_daily_profit(self, user_id):
-        logger.info(f"Processing daily profit for all active investments for user {user_id}")
+    def fund_wallet_with_daily_profit(self):
+        logger.info("Processing daily profit for all active investments for all users.")
         try:
-            # Fetch all active investments for the user
-            logger.info(f"Fetching all active investments for user {user_id}")
-            investments = investment_service.fetch_all_investments(user_id)
-            if not investments:
-                logger.info(f"No active investments found for user {user_id}")
+            # Fetch all active users
+            users = self.db.query(User).all()
+            if not users:
+                logger.info("No active users found.")
                 return False
 
             updated = False
-            for investment in investments:
-                if not investment.get('is_active'):
-                    logger.info(f"Skipping inactive investment {investment.get('id')}")
+            for user in users:
+                logger.info(f"Processing daily profit for user {user.id}")
+                # Fetch all active investments for the user
+                investments = investment_service.fetch_all_investments(user.id)
+                if not investments:
+                    logger.info(f"No active investments found for user {user.id}")
                     continue
 
-                investment_id = investment.get('id')
-                logger.info(f"Processing investment {investment_id} for daily profit")
-                investment_record = self.db.query(Investments).filter_by(id=investment_id, user_id=user_id).first()
-                if not investment_record:
-                    logger.warning(f"Investment record {investment_id} not found in DB")
-                    continue
-
-                current_time = datetime.datetime.now(datetime.timezone.utc)
-                last_profit_time = investment_record.date_profit_added or investment_record.created_at
-                if last_profit_time.tzinfo is None:
-                    last_profit_time = last_profit_time.replace(tzinfo=datetime.timezone.utc)
-                logger.info(
-                    f"\ncurrent_time: {current_time} tzinfo: {current_time.tzinfo}\n"
-                    f"last_profit_time: {last_profit_time} tzinfo: {last_profit_time.tzinfo}\n"
-                )
-                time_diff = current_time - last_profit_time
-
-                # Check using next_profit_time if available
-                next_profit_time = investment_record.date_next_profit
-                if next_profit_time:
-                    if next_profit_time.tzinfo is None:
-                        next_profit_time = next_profit_time.replace(tzinfo=datetime.timezone.utc)
-                    if current_time < next_profit_time:
-                        logger.info(f"Current time has not reached next_profit_time for investment {investment_id}")
+                for investment in investments:
+                    if not investment.get('is_active'):
+                        logger.info(f"Skipping inactive investment {investment.get('id')} for user {user.id}")
                         continue
 
-                if time_diff.total_seconds() < 30:  # 24 hours
-                    logger.info(f"24 hours haven't passed since last profit for investment {investment_id}")
-                    continue
+                    investment_id = investment.get('id')
+                    logger.info(f"Processing investment {investment_id} for daily profit")
+                    investment_record = self.db.query(Investments).filter_by(id=investment_id, user_id=user.id).first()
+                    if not investment_record:
+                        logger.warning(f"Investment record {investment_id} not found in DB")
+                        continue
 
-                logger.info(f"Calculating daily profit for investment {investment_id}")
-                daily_profit = investment_service.calculate_daily_amount(investment_id)["daily_amount"]
-                if daily_profit:
-                    logger.info(f"Adding daily profit {daily_profit} to wallet for user {user_id}")
-                    wallet = self.db.query(self.model).filter_by(user_id=user_id).first()
-                    if not wallet:
-                        logger.warning(f"No wallet found for user {user_id}")
-                        wallet = self._create_wallet()
+                    current_time = datetime.datetime.now(datetime.timezone.utc)
+                    last_profit_time = investment_record.date_profit_added or investment_record.created_at
+                    if last_profit_time.tzinfo is None:
+                        last_profit_time = last_profit_time.replace(tzinfo=datetime.timezone.utc)
 
-                    wallet.balance += daily_profit
+                    time_diff = current_time - last_profit_time
 
-                    logger.info(f"Creating transaction for daily profit for investment {investment_id}")
-                    transaction = Transaction(
-                        user_id=user_id,
-                        wallet_id=wallet.id,
-                        plan_id=investment_record.plan_id,
-                        transaction_type="daily profit",
-                        token="USD",
-                        previous_balance=wallet.balance - daily_profit,
-                        present_balance=wallet.balance,
-                        status=TransactionStatus.success,
-                    )
-                    self.db.add(transaction)
-                    investment_record.date_next_profit = current_time + datetime.timedelta(hours=24)
-                    investment_record.profit_added = daily_profit
-                    investment_record.last_viewed = current_time
-                    investment_record.wallet_id = wallet.id
-                    investment_record.date_profit_added = current_time
-                    self.db.add(investment_record)
+                    # Check using next_profit_time if available
+                    next_profit_time = investment_record.date_next_profit
+                    if next_profit_time:
+                        if next_profit_time.tzinfo is None:
+                            next_profit_time = next_profit_time.replace(tzinfo=datetime.timezone.utc)
+                        if current_time < next_profit_time:
+                            logger.info(f"Current time has not reached next_profit_time for investment {investment_id} for user {user.id}")
+                            continue
 
-                    updated = True
-                    logger.info(f"Added daily profit {daily_profit} to wallet for investment {investment_id}")
+                    if time_diff.total_seconds() < 30:  # 24 hours
+                        logger.info(f"24 hours haven't passed since last profit for investment {investment_id} for user {user.id}")
+                        continue
+
+                    logger.info(f"Calculating daily profit for investment {investment_id} for user {user.id}")
+                    daily_profit = investment_service.calculate_daily_amount(investment_id)["daily_amount"]
+                    if daily_profit:
+                        logger.info(f"Adding daily profit {daily_profit} to wallet for user {user.id}")
+                        wallet = self.db.query(self.model).filter_by(user_id=user.id).first()
+                        if not wallet:
+                            logger.warning(f"No wallet found for user {user.id}")
+                            wallet = self._create_wallet()
+
+                        wallet.balance += daily_profit
+
+                        logger.info(f"Creating transaction for daily profit for investment {investment_id}")
+                        transaction = Transaction(
+                            user_id=user.id,
+                            wallet_id=wallet.id,
+                            plan_id=investment_record.plan_id,
+                            transaction_type="daily profit",
+                            token="USD",
+                            previous_balance=wallet.balance - daily_profit,
+                            present_balance=wallet.balance,
+                            status=TransactionStatus.success,
+                        )
+                        self.db.add(transaction)
+                        investment_record.date_next_profit = current_time + datetime.timedelta(hours=24)
+                        investment_record.profit_added = daily_profit
+                        investment_record.last_viewed = current_time
+                        investment_record.wallet_id = wallet.id
+                        investment_record.date_profit_added = current_time
+                        self.db.add(investment_record)
+
+                        updated = True
+                        logger.info(f"Added daily profit {daily_profit} to wallet for investment {investment_id} for user {user.id}")
 
             if updated:
-                logger.info("Committing daily profit updates to database")
+                logger.info("Committing daily profit updates to database.")
                 self.db.commit()
-                logger.info("Successfully added daily profits for eligible investments")
+                logger.info("Successfully added daily profits for eligible investments.")
                 return True
             else:
-                logger.info("No eligible investments for daily profit update")
+                logger.info("No eligible investments for daily profit update.")
                 return False
-
         except SQLAlchemyError as e:
             logger.error(f"Database error while funding wallet: {str(e)}")
             self.db.rollback()
             raise ServerError("Error processing daily profit")
+        except Exception as e:
+            logger.error(f"Error processing daily profit for user: {str(e)}")
+            return False
 
     def check_balance(self):
         user_id = self.auth.get_current_user().id
         logger.info(f"Checking wallet balance for user {user_id}")
         try:
             logger.info(f"Funding wallet with daily profit before checking balance for user {user_id}")
-            self.fund_wallet_with_daily_profit(user_id)
-        except ValueError as e:
+            self.fund_wallet_with_daily_profit()
+        except Exception as e:
             logger.warning(f"Could not fund wallet for user {user_id}: {str(e)}")
         wallet = self.db.query(self.model).filter_by(user_id=user_id).first()
         if not wallet:
